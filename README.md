@@ -4,67 +4,67 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 ## Progress
 
-| Status | Count |
-|--------|-------|
-| Labs completed | 49 |
-| Labs remaining | ~25 |
-| Labs to redo | Lab 42 (IPv6), Lab 48 (STP) |
+| Status         | Count                       |
+| -------------- | --------------------------- |
+| Labs completed | 49                          |
+| Labs remaining | ~25                         |
+| Labs to redo   | Lab 42 (IPv6), Lab 48 (STP) |
 
 ---
 
 ## Lab Index
 
-| # | File | Topic |
-|---|------|-------|
-| 01 | `001-router-security.pkt` | Router Security — passwords, encryption |
-| 02 | `002-router-security.pkt` | Router Security — enable secret |
-| 03 | `003-router-security.pkt` | Router Security — review |
-| 04 | `004-serial-connection.pkt` | Serial Connections — DCE/DTE, clock rate |
-| 05 | `005-vlans-switches.pkt` | VLANs on Switches |
-| 06 | `006-vlans-multilayer-swtiches.pkt` | VLANs on Multilayer Switches |
-| 07 | `007-inter-vlan-routing.pkt` | Inter-VLAN Routing |
-| 08 | `008-troubleshooting-inter-vlaning.pkt` | Troubleshooting Inter-VLAN Routing |
-| 09 | `009-troubleshooting-inter-vlaning.pkt` | Troubleshooting Inter-VLAN Routing |
-| 10 | `010-local-username-database.pkt` | Local Username Database |
-| 11 | `011-motd-and-login-banners.pkt` | MOTD and Login Banners |
-| 12 | `012-vlan-naming.pkt` | VLAN Naming |
-| 13 | `013-cisco-discovery-protocol.pkt` | Cisco Discovery Protocol (CDP) |
-| 14 | `014-cisco-discovery-protocol.pkt` | CDP — disable/enable |
-| 15 | `015-system-configuration-dialog.pkt` | System Configuration Dialog |
-| 16 | `016-loopback-interface.pkt` | Loopback Interfaces |
-| 17 | `017-port-security.pkt` | Port Security |
-| 18 | `018-port-security.pkt` | Port Security — sticky MAC |
-| 19 | `019-port-security.pkt` | Port Security — violation actions |
-| 20 | `020-configuration-review.pkt` | Configuration Review |
-| 21 | `021-troubleshooting-review.pkt` | Troubleshooting Review |
-| 22 | `022-telnet.pkt` | Remote Access — Telnet |
-| 23 | `023-ssh.pkt` | Remote Access — SSH |
-| 24 | `024-static-routing.pkt` | Static Routing |
-| 25 | `025-static-routing.pkt` | Static Routing — multi-router |
-| 26 | `026-static-routing-backup.pkt` | Static Routing — backup/floating routes |
-| 27 | `027-dynamic-routing-rip.pkt` | Dynamic Routing — RIP |
-| 28 | `028-dynamic-routing-rip.pkt` | Dynamic Routing — RIP passive interface |
-| 29 | `029-standard-acls.pkt` | Standard ACLs (numbered) |
-| 30 | `030-extended-acls.pkt` | Extended ACLs (numbered) |
-| 31 | `031-named-acls.pkt` | Named ACLs |
-| 32 | `032-ntp.pkt` | Network Time Protocol (NTP) |
-| 33 | `033-ntp.pkt` | NTP — authentication |
-| 34 | `034-lldp.pkt` | Link Layer Discovery Protocol (LLDP) |
-| 35 | `035-dhcp.pkt` | DHCP — server configuration |
-| 36 | `036-dns.pkt` | DNS |
-| 37 | `037-static-nat.pkt` | NAT — Static |
-| 38 | `038-dynamic-nat.pkt` | NAT — Dynamic |
-| 39 | `039-pat.pkt` | NAT — PAT (overload) |
-| 40 | `040-syslog.pkt` | Syslog |
-| 41 | `041-pass-recovery-config-backup-os-upgrading.pkt` | Password Recovery, Config Backup, IOS Upgrade |
-| 42 | `042-ipv6.pkt` | IPv6 — addressing and routing *(redo)* |
-| 43 | `043-review-configuration.pkt` | Configuration Review |
-| 44 | `044-review-troubleshooting.pkt` | Troubleshooting Review |
-| 45 | `045-dtp.pkt` | Dynamic Trunking Protocol (DTP) |
-| 46 | `046-vtp.pkt` | VLAN Trunking Protocol (VTP) |
-| 47 | `047-troubleshooting-vtp.pkt` | Troubleshooting VTP |
-| 48 | `048-stp.pkt` | Spanning Tree Protocol (STP) *(redo)* |
-| 49 | `049-stp-election.pkt` | STP — root bridge election |
+| #   | File                                               | Topic                                         |
+| --- | -------------------------------------------------- | --------------------------------------------- |
+| 01  | `001-router-security.pkt`                          | Router Security — passwords, encryption       |
+| 02  | `002-router-security.pkt`                          | Router Security — enable secret               |
+| 03  | `003-router-security.pkt`                          | Router Security — review                      |
+| 04  | `004-serial-connection.pkt`                        | Serial Connections — DCE/DTE, clock rate      |
+| 05  | `005-vlans-switches.pkt`                           | VLANs on Switches                             |
+| 06  | `006-vlans-multilayer-swtiches.pkt`                | VLANs on Multilayer Switches                  |
+| 07  | `007-inter-vlan-routing.pkt`                       | Inter-VLAN Routing                            |
+| 08  | `008-troubleshooting-inter-vlaning.pkt`            | Troubleshooting Inter-VLAN Routing            |
+| 09  | `009-troubleshooting-inter-vlaning.pkt`            | Troubleshooting Inter-VLAN Routing            |
+| 10  | `010-local-username-database.pkt`                  | Local Username Database                       |
+| 11  | `011-motd-and-login-banners.pkt`                   | MOTD and Login Banners                        |
+| 12  | `012-vlan-naming.pkt`                              | VLAN Naming                                   |
+| 13  | `013-cisco-discovery-protocol.pkt`                 | Cisco Discovery Protocol (CDP)                |
+| 14  | `014-cisco-discovery-protocol.pkt`                 | CDP — disable/enable                          |
+| 15  | `015-system-configuration-dialog.pkt`              | System Configuration Dialog                   |
+| 16  | `016-loopback-interface.pkt`                       | Loopback Interfaces                           |
+| 17  | `017-port-security.pkt`                            | Port Security                                 |
+| 18  | `018-port-security.pkt`                            | Port Security — sticky MAC                    |
+| 19  | `019-port-security.pkt`                            | Port Security — violation actions             |
+| 20  | `020-configuration-review.pkt`                     | Configuration Review                          |
+| 21  | `021-troubleshooting-review.pkt`                   | Troubleshooting Review                        |
+| 22  | `022-telnet.pkt`                                   | Remote Access — Telnet                        |
+| 23  | `023-ssh.pkt`                                      | Remote Access — SSH                           |
+| 24  | `024-static-routing.pkt`                           | Static Routing                                |
+| 25  | `025-static-routing.pkt`                           | Static Routing — multi-router                 |
+| 26  | `026-static-routing-backup.pkt`                    | Static Routing — backup/floating routes       |
+| 27  | `027-dynamic-routing-rip.pkt`                      | Dynamic Routing — RIP                         |
+| 28  | `028-dynamic-routing-rip.pkt`                      | Dynamic Routing — RIP passive interface       |
+| 29  | `029-standard-acls.pkt`                            | Standard ACLs (numbered)                      |
+| 30  | `030-extended-acls.pkt`                            | Extended ACLs (numbered)                      |
+| 31  | `031-named-acls.pkt`                               | Named ACLs                                    |
+| 32  | `032-ntp.pkt`                                      | Network Time Protocol (NTP)                   |
+| 33  | `033-ntp.pkt`                                      | NTP — authentication                          |
+| 34  | `034-lldp.pkt`                                     | Link Layer Discovery Protocol (LLDP)          |
+| 35  | `035-dhcp.pkt`                                     | DHCP — server configuration                   |
+| 36  | `036-dns.pkt`                                      | DNS                                           |
+| 37  | `037-static-nat.pkt`                               | NAT — Static                                  |
+| 38  | `038-dynamic-nat.pkt`                              | NAT — Dynamic                                 |
+| 39  | `039-pat.pkt`                                      | NAT — PAT (overload)                          |
+| 40  | `040-syslog.pkt`                                   | Syslog                                        |
+| 41  | `041-pass-recovery-config-backup-os-upgrading.pkt` | Password Recovery, Config Backup, IOS Upgrade |
+| 42  | `042-ipv6.pkt`                                     | IPv6 — addressing and routing _(redo)_        |
+| 43  | `043-review-configuration.pkt`                     | Configuration Review                          |
+| 44  | `044-review-troubleshooting.pkt`                   | Troubleshooting Review                        |
+| 45  | `045-dtp.pkt`                                      | Dynamic Trunking Protocol (DTP)               |
+| 46  | `046-vtp.pkt`                                      | VLAN Trunking Protocol (VTP)                  |
+| 47  | `047-troubleshooting-vtp.pkt`                      | Troubleshooting VTP                           |
+| 48  | `048-stp.pkt`                                      | Spanning Tree Protocol (STP) _(redo)_         |
+| 49  | `049-stp-election.pkt`                             | STP — root bridge election                    |
 
 ---
 
@@ -76,20 +76,20 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 ### Cables
 
-| Cable Type | Use Case |
-|------------|----------|
+| Cable Type              | Use Case                                               |
+| ----------------------- | ------------------------------------------------------ |
 | Copper Straight-Through | Connect **different** device types (e.g. PC to Switch) |
-| Copper Cross-Over | Connect **same** device types (e.g. Switch to Switch) |
+| Copper Cross-Over       | Connect **same** device types (e.g. Switch to Switch)  |
 
 ---
 
 ### CLI Modes
 
-| Prompt | Mode | Capability |
-|--------|------|------------|
-| `Router>` | User EXEC | Monitoring commands only, no config changes |
-| `Router#` | Privileged EXEC | Can run all show and config commands |
-| `Router(config)#` | Global Configuration | Change device configuration |
+| Prompt            | Mode                 | Capability                                  |
+| ----------------- | -------------------- | ------------------------------------------- |
+| `Router>`         | User EXEC            | Monitoring commands only, no config changes |
+| `Router#`         | Privileged EXEC      | Can run all show and config commands        |
+| `Router(config)#` | Global Configuration | Change device configuration                 |
 
 ```
 Router> enable                   ! enter privileged EXEC
@@ -162,6 +162,7 @@ Router(config-line)# exec-timeout <minutes>         ! auto-disconnect after X mi
 ```
 
 > Switches are Layer 2 devices. To reach a switch via Telnet/SSH, you must configure a VLAN interface with an IP address:
+>
 > ```
 > Switch(config)# interface vlan 1
 > Switch(config-if)# ip address 192.168.1.1 255.255.255.0
@@ -231,10 +232,10 @@ Router# show interface <interface>
 
 ### Serial Connections
 
-| Term | Meaning |
-|------|---------|
-| DCE | Data Communications Equipment — supplies the clock signal |
-| DTE | Data Terminal Equipment — receives the clock signal |
+| Term | Meaning                                                   |
+| ---- | --------------------------------------------------------- |
+| DCE  | Data Communications Equipment — supplies the clock signal |
+| DTE  | Data Terminal Equipment — receives the clock signal       |
 
 ```
 Router# show controllers <interface>               ! identify DCE or DTE side
@@ -319,11 +320,11 @@ Switch(config-if)# switchport nonegotiate          ! disable DTP on this port
 
 Propagates VLAN configuration across switches in the same VTP domain.
 
-| Mode | Behaviour |
-|------|-----------|
-| Server (default) | Creates, deletes, and advertises VLANs |
-| Client | Syncs from server, cannot create/delete VLANs |
-| Transparent | Does not sync, but forwards VTP messages |
+| Mode             | Behaviour                                     |
+| ---------------- | --------------------------------------------- |
+| Server (default) | Creates, deletes, and advertises VLANs        |
+| Client           | Syncs from server, cannot create/delete VLANs |
+| Transparent      | Does not sync, but forwards VTP messages      |
 
 ```
 Switch(config)# vtp mode <server|client|transparent>
@@ -337,40 +338,148 @@ Switch(config)# vtp version <version>
 
 ### Spanning Tree Protocol (STP)
 
-Prevents Layer 2 loops by blocking redundant paths.
+Layer 2 protocol that prevents loops by placing redundant ports in a blocking state, creating a single loop-free path through the network. Runs on all switches by default.
 
-#### Key Concepts
+#### Bridge ID and Root Bridge Election
 
-- **Bridge ID** = Priority (default 32768) + MAC address. Lowest Bridge ID becomes the **Root Bridge**.
-- All ports on the root bridge are **designated**.
-- Non-root switches select the port with the **lowest cost** to the root as their **root port**.
-- Remaining ports become **designated** or **blocked**.
+- **Bridge ID** = Bridge Priority (default 32768) + MAC address — lowest Bridge ID wins
+- Modern (PVST+) Bridge ID splits the priority field: 4-bit priority + 12-bit Extended System ID (= VLAN ID)
+- Bridge priority can only be changed in multiples of **4096** (the remaining 12 bits are fixed to the VLAN ID)
+- Default priority per VLAN = 32768 + VLAN number (e.g. VLAN 1 → 32769)
+- All ports on the root bridge are **designated (forwarding)**
+- Tie-breaking order: (1) lowest root cost → (2) lowest neighbor bridge ID → (3) lowest neighbor port ID
 
-| Interface Type | Default STP Cost |
-|----------------|-----------------|
-| GigabitEthernet | 4 |
-| FastEthernet | 19 |
+#### STP Port Roles
+
+| Role            | Description                                            |
+| --------------- | ------------------------------------------------------ |
+| Root Port       | Best path toward root bridge (one per non-root switch) |
+| Designated Port | Forwarding port on each network segment                |
+| Non-Designated  | Blocking port — backup path                            |
+
+#### STP Port States (Classic STP / PVST+)
+
+| State      | Send BPDUs | Receive BPDUs | Forward Traffic | Learn MACs | Type                |
+| ---------- | ---------- | ------------- | --------------- | ---------- | ------------------- |
+| Blocking   | No         | Yes           | No              | No         | Stable              |
+| Listening  | Yes        | Yes           | No              | No         | Transitional (15 s) |
+| Learning   | Yes        | Yes           | No              | Yes        | Transitional (15 s) |
+| Forwarding | Yes        | Yes           | Yes             | Yes        | Stable              |
+| Disabled   | No         | No            | No              | No         | Stable              |
+
+> Convergence from blocking → forwarding = **50 seconds** (20 s Max Age + 15 s Listening + 15 s Learning).
+> A port can move from forwarding → blocking **instantly**.
+
+#### RSTP Port States
+
+| State      | Send BPDUs | Receive BPDUs | Forward Traffic | Learn MACs | Type         |
+| ---------- | ---------- | ------------- | --------------- | ---------- | ------------ |
+| Discarding | No         | Yes           | No              | No         | Stable       |
+| Learning   | Yes        | Yes           | No              | Yes        | Transitional |
+| Forwarding | Yes        | Yes           | Yes             | Yes        | Stable       |
+
+#### STP Versions
+
+| Version                   | VLANs                         | Encapsulation | Notes                            |
+| ------------------------- | ----------------------------- | ------------- | -------------------------------- |
+| STP (802.1D)              | Single instance for all VLANs | —             | Original standard                |
+| PVST                      | One instance per VLAN         | ISL only      | Cisco proprietary                |
+| PVST+                     | One instance per VLAN         | ISL + dot1Q   | Default on older Cisco switches  |
+| Rapid STP (RSTP / 802.1w) | Single instance for all VLANs | —             | Much faster convergence          |
+| Rapid PVST+               | One instance per VLAN         | ISL + dot1Q   | Default on modern Cisco switches |
+| MST (802.1s)              | Groups VLANs into instances   | —             | Uses RSTP mechanics              |
+
+#### STP / RSTP Port Cost
+
+| Speed    | STP Cost | RSTP Cost |
+| -------- | -------- | --------- |
+| 10 Mb/s  | 100      | 2,000,000 |
+| 100 Mb/s | 19       | 200,000   |
+| 1 Gb/s   | 4        | 20,000    |
+| 10 Gb/s  | 2        | 2,000     |
+| 100 Gb/s | 1        | 200       |
+| 1 Tb/s   | 1        | 20        |
+
+#### RSTP Specific Behaviour
+
+- RSTP uses a **handshake mechanism** instead of timers for faster convergence
+- A switch considers a neighbour lost after **3 missed BPDUs** (~6 s) instead of the 20 s Max Age timer
+- All switches originate their own BPDUs from designated ports (classic STP: only root originates)
+- Non-designated port role is split into **Alternate** (backup root port) and **Backup** (backup designated port, seen only via hubs)
+- Backwards compatible: ports connected to classic STP switches fall back to classic STP behaviour
+
+| RSTP Link Type | Definition                                                                    |
+| -------------- | ----------------------------------------------------------------------------- |
+| Edge           | Connected to an end host — moves directly to forwarding (PortFast equivalent) |
+| Point-to-Point | Full-duplex link between two switches                                         |
+| Shared         | Half-duplex link to a hub                                                     |
+
+```
+Switch(config-if)# spanning-tree portfast                      ! configure edge port
+Switch(config-if)# spanning-tree link-type point-to-point      ! configure P2P link
+Switch(config-if)# spanning-tree link-type shared              ! configure shared link
+```
+
+#### Verification
 
 ```
 Switch# show spanning-tree
+Switch# show spanning-tree vlan <vlan-id>
 Switch# show spanning-tree summary
-Switch(config)# spanning-tree mode rapid-pvst
+Switch# show errdisable recovery
 ```
 
-#### Influence Root Bridge Election
+#### STP Mode and Root Bridge Influence
 
 ```
-SW2(config)# spanning-tree vlan 20 root primary     ! force this switch to be root for VLAN 20
-SW2(config)# spanning-tree vlan 10 root secondary   ! make this switch secondary root for VLAN 10
+Switch(config)# spanning-tree mode rapid-pvst                  ! enable Rapid PVST+
+Switch(config)# spanning-tree vlan <id> root primary           ! force this switch to become root
+Switch(config)# spanning-tree vlan <id> root secondary         ! set this switch as secondary root
+Switch(config)# spanning-tree vlan <id> priority <value>       ! set priority manually (multiples of 4096)
 ```
 
-#### PortFast and BPDU Guard
+#### STP Toolkit
+
+**PortFast** — lets an access port skip Listening/Learning and go directly to Forwarding. Only use on ports connected to end hosts, never on trunk or switch-connected ports.
 
 ```
-SW2(config)# spanning-tree portfast bpduguard default     ! enable on all access ports globally
-SW2(config-if)# spanning-tree portfast                    ! enable on specific interface
-SW2(config-if)# spanning-tree bpduguard enable            ! enable bpduguard on specific interface
+Switch(config)# spanning-tree portfast default                 ! enable PortFast on all access ports globally
+Switch(config-if)# spanning-tree portfast                      ! enable PortFast on a specific interface
+Switch(config-if)# spanning-tree portfast trunk                ! enable PortFast on a trunk interface (rare)
 ```
+
+**BPDU Guard** — shuts the port (err-disabled) if a BPDU is received. Protects PortFast ports from accidentally connecting to another switch.
+
+```
+Switch(config)# spanning-tree portfast bpduguard default       ! enable BPDU Guard on all PortFast ports globally
+Switch(config-if)# spanning-tree bpduguard enable              ! enable BPDU Guard on a specific interface
+```
+
+> BPDU Guard causes **err-disabled** state. Even with BPDU Guard enabled, the port still _sends_ BPDUs.
+
+**BPDU Filter** — prevents a port from sending BPDUs. Two behaviours depending on where it is configured:
+
+```
+Switch(config)# spanning-tree portfast bpdufilter default      ! globally: if a BPDU is received, PortFast/filter
+                                                               !   are disabled and port runs normal STP (recommended)
+Switch(config-if)# spanning-tree bpdufilter enable             ! per-interface: stops sending AND ignores received
+                                                               !   BPDUs — effectively disables STP on port (dangerous)
+Switch(config-if)# spanning-tree bpdufilter disable            ! disable BPDU Filter on interface
+```
+
+**Root Guard** — prevents a port from becoming a Root Port. If a superior BPDU is received, the port enters **root-inconsistent** state (not err-disabled) and stops forwarding until the superior BPDUs stop.
+
+**Loop Guard** — if an interface stops receiving BPDUs, it enters **err-disabled** state instead of transitioning to forwarding, preventing accidental loops caused by a unidirectional link failure.
+
+#### Error Disable Recovery
+
+```
+Switch# show errdisable recovery                               ! view recovery status and timers
+Switch(config)# errdisable recovery cause bpduguard            ! auto-recover ports disabled by BPDU Guard
+Switch(config)# errdisable recovery interval <seconds>         ! set recovery timer (default 300 s)
+```
+
+> To manually recover: fix the root cause, then `shutdown` followed by `no shutdown` on the interface.
 
 ---
 
@@ -393,13 +502,14 @@ Switch# show port-security address
 
 #### Violation Actions
 
-| Action | Drops Traffic | Shuts Port | Message | Counter |
-|--------|--------------|------------|---------|---------|
-| Protect | Yes | No | No | No |
-| Restrict | Yes | No | Yes | Yes |
-| Shutdown (default) | Yes | Yes | — | Yes |
+| Action             | Drops Traffic | Shuts Port | Message | Counter |
+| ------------------ | ------------- | ---------- | ------- | ------- |
+| Protect            | Yes           | No         | No      | No      |
+| Restrict           | Yes           | No         | Yes     | Yes     |
+| Shutdown (default) | Yes           | Yes        | —       | Yes     |
 
 To recover from err-disabled state:
+
 ```
 Switch(config-if)# shutdown
 Switch(config-if)# no shutdown
@@ -463,11 +573,11 @@ Router(config)# ip route <dest_network> <dest_mask> <exit_interface>
 
 #### Administrative Distance (AD)
 
-| Route Type | AD |
-|------------|----|
-| Connected interface | 0 |
-| Static route | 1 |
-| RIP | 120 |
+| Route Type          | AD  |
+| ------------------- | --- |
+| Connected interface | 0   |
+| Static route        | 1   |
+| RIP                 | 120 |
 
 When multiple paths exist, the router prefers the **lowest AD**. Equal AD → compare **metric** (e.g. hop count for RIP).
 
@@ -501,10 +611,10 @@ Router# show ip protocols
 
 #### Types
 
-| Type | Number Range | Filters On | Best Placed |
-|------|-------------|------------|-------------|
-| Standard | 1–99 | Source IP only | Close to **destination** |
-| Extended | 100–199 | Source + Destination IP, protocol, port | Close to **source** |
+| Type     | Number Range | Filters On                              | Best Placed              |
+| -------- | ------------ | --------------------------------------- | ------------------------ |
+| Standard | 1–99         | Source IP only                          | Close to **destination** |
+| Extended | 100–199      | Source + Destination IP, protocol, port | Close to **source**      |
 
 > ACLs have an **implicit deny all** at the bottom. Always add a `permit any` if you only want to deny specific traffic.
 
@@ -728,4 +838,4 @@ Based on the CCNA 200-301 exam syllabus, the likely remaining topics include:
 
 ---
 
-*CCNA 200-301 certification exam in progress.*
+_CCNA 200-301 certification exam in progress._
