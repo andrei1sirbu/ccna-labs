@@ -6,8 +6,8 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 | Status         | Count                       |
 | -------------- | --------------------------- |
-| Labs completed | 49                          |
-| Labs remaining | ~25                         |
+| Labs completed | 53                          |
+| Labs remaining | ~21                         |
 | Labs to redo   | Lab 42 (IPv6), Lab 48 (STP) |
 
 ---
@@ -65,6 +65,13 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | 47  | `047-troubleshooting-vtp.pkt`                      | Troubleshooting VTP                           |
 | 48  | `048-stp.pkt`                                      | Spanning Tree Protocol (STP) _(redo)_         |
 | 49  | `049-stp-election.pkt`                             | STP — root bridge election                    |
+| 50  | `050-etherchannel.pkt`                             | EtherChannel — LACP / PAgP / Static           |
+| 51  | `051-troubleshooting-etherchannel.pkt`             | Troubleshooting EtherChannel                  |
+| 52  | `052-intervlan-routing.pkt`                        | Inter-VLAN Routing — review                   |
+| 53  | `053-troubleshooting-intervlan-routing.pkt`        | Troubleshooting Inter-VLAN Routing — review   |
+| —   | `extra-configuring-stp.pkt`                        | STP configuration (extra)                     |
+| —   | `extra-rapid-stp.pkt`                              | Rapid STP configuration (extra)               |
+| —   | `extra-etherchannel-configuration.pkt`             | EtherChannel — Layer 3 configuration (extra)  |
 
 ---
 
@@ -348,6 +355,9 @@ Layer 2 protocol that prevents loops by placing redundant ports in a blocking st
 - Default priority per VLAN = 32768 + VLAN number (e.g. VLAN 1 → 32769)
 - All ports on the root bridge are **designated (forwarding)**
 - Tie-breaking order: (1) lowest root cost → (2) lowest neighbor bridge ID → (3) lowest neighbor port ID
+- Switches send Hello BPDUs every **2 seconds** by default; receiving one on an interface means it is connected to another switch
+- BPDU frames use destination MAC **01:00:0c:cc:cc:cd**
+- In classic STP only the root bridge originates BPDUs; all other switches relay the root's BPDUs
 
 #### STP Port Roles
 
@@ -405,8 +415,17 @@ Layer 2 protocol that prevents loops by placing redundant ports in a blocking st
 - RSTP uses a **handshake mechanism** instead of timers for faster convergence
 - A switch considers a neighbour lost after **3 missed BPDUs** (~6 s) instead of the 20 s Max Age timer
 - All switches originate their own BPDUs from designated ports (classic STP: only root originates)
-- Non-designated port role is split into **Alternate** (backup root port) and **Backup** (backup designated port, seen only via hubs)
+- Non-designated port role is split into **Alternate** (backup root port, receives superior BPDUs from another switch) and **Backup** (backup designated port, seen only when two interfaces share the same collision domain via a hub — the port with the lower port ID becomes designated, the other becomes Backup)
 - Backwards compatible: ports connected to classic STP switches fall back to classic STP behaviour
+- UplinkFast, BackboneFast, and PortFast are built into RSTP — they do not need to be configured separately
+
+#### RSTP BPDU Differences vs Classic STP
+
+| Field            | Classic STP | RSTP            |
+| ---------------- | ----------- | --------------- |
+| Protocol version | 0           | 2               |
+| BPDU type        | 0           | 2               |
+| Flags field      | Bits 1 & 8  | All 8 bits used |
 
 | RSTP Link Type | Definition                                                                    |
 | -------------- | ----------------------------------------------------------------------------- |
@@ -480,6 +499,74 @@ Switch(config)# errdisable recovery interval <seconds>         ! set recovery ti
 ```
 
 > To manually recover: fix the root cause, then `shutdown` followed by `no shutdown` on the interface.
+
+---
+
+### EtherChannel
+
+Groups multiple physical interfaces into a single logical interface (also called **Port Channel** or **Link Aggregation Group / LAG**). STP sees only one logical link, so no ports are blocked. Provides both increased bandwidth (load-balanced across physical links) and redundancy (if one link fails, the others keep forwarding).
+
+> Multiple connections between two switches without EtherChannel cause STP to block all but one, so the bandwidth problem persists despite extra cables.
+
+#### Load Balancing
+
+EtherChannel load-balances per **flow** — frames belonging to the same source/destination pair always use the same physical link. The algorithm can be based on:
+
+- Source MAC / Destination MAC / Source + Destination MAC
+- Source IP / Destination IP / Source + Destination IP
+
+```
+Switch# show etherchannel load-balance
+Switch(config)# port-channel load-balance <method>     ! e.g. src-dst-mac
+```
+
+#### Negotiation Protocols
+
+| Protocol | Standard          | Modes                 | Forms EtherChannel |
+| -------- | ----------------- | --------------------- | ------------------ |
+| PAgP     | Cisco proprietary | desirable + desirable | Yes                |
+| PAgP     | Cisco proprietary | desirable + auto      | Yes                |
+| PAgP     | Cisco proprietary | auto + auto           | No                 |
+| LACP     | IEEE 802.3ad      | active + active       | Yes                |
+| LACP     | IEEE 802.3ad      | active + passive      | Yes                |
+| LACP     | IEEE 802.3ad      | passive + passive     | No                 |
+| Static   | —                 | on + on               | Yes                |
+
+> Maximum **8 active** interfaces per EtherChannel. LACP supports up to 16 configured (8 active + 8 standby). Static `on` mode only works with `on` on the other side.
+
+#### Configuration
+
+```
+Switch(config-if-range)# channel-group <nr> mode <mode>   ! desirable / auto / active / passive / on
+Switch(config-if-range)# channel-protocol <pagp|lacp>     ! optional — force protocol
+Switch(config)# interface port-channel <nr>               ! enter logical interface to configure
+```
+
+Member interfaces must have matching configuration — mismatched ports are excluded from the bundle:
+
+- Same duplex and speed
+- Same switchport mode (access or trunk)
+- Same allowed VLANs and native VLAN (trunk only)
+
+> The channel-group number must match across member interfaces on the **same** switch, but does not need to match the number on the other switch.
+
+#### Layer 3 EtherChannel
+
+Use multilayer switches. Remove the switchport, then configure an IP on the port-channel interface.
+
+```
+Switch(config-if-range)# no switchport
+Switch(config-if-range)# channel-group 1 mode active
+Switch(config)# interface port-channel 1
+Switch(config-if)# ip address 10.0.0.1 255.255.255.252
+```
+
+#### Verification
+
+```
+Switch# show etherchannel summary
+Switch# show etherchannel port-channel
+```
 
 ---
 
@@ -821,7 +908,6 @@ Router(config)# ipv6 route <network_prefix> <gateway_address>
 Based on the CCNA 200-301 exam syllabus, the likely remaining topics include:
 
 - OSPF (single-area and multi-area)
-- EtherChannel (LACP / PAgP)
 - FHRP — HSRP / VRRP
 - Wireless LAN configuration
 - IPv6 routing
