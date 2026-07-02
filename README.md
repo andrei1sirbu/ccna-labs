@@ -6,8 +6,8 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 | Status         | Count                       |
 | -------------- | --------------------------- |
-| Labs completed | 53                          |
-| Labs remaining | ~21                         |
+| Labs completed | 56                          |
+| Labs remaining | ~18                         |
 | Labs to redo   | Lab 42 (IPv6), Lab 48 (STP) |
 
 ---
@@ -72,6 +72,10 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | —   | `extra-configuring-stp.pkt`                        | STP configuration (extra)                     |
 | —   | `extra-rapid-stp.pkt`                              | Rapid STP configuration (extra)               |
 | —   | `extra-etherchannel-configuration.pkt`             | EtherChannel — Layer 3 configuration (extra)  |
+| 58  | `058-eigrp-configuration.pkt`                      | EIGRP — configuration                         |
+| 59  | `059-eigrp-troubleshooting.pkt`                    | Troubleshooting EIGRP                         |
+| 60  | `060-ipv6-eigrp-configuration.pkt`                 | IPv6 EIGRP — configuration                    |
+| —   | `extra-eigrp-configuration.pkt`                    | EIGRP — unequal-cost load balancing (extra)   |
 
 ---
 
@@ -664,7 +668,9 @@ Router(config)# ip route <dest_network> <dest_mask> <exit_interface>
 | ------------------- | --- |
 | Connected interface | 0   |
 | Static route        | 1   |
+| EIGRP (internal)    | 90  |
 | RIP                 | 120 |
+| EIGRP (external)    | 170 |
 
 When multiple paths exist, the router prefers the **lowest AD**. Equal AD → compare **metric** (e.g. hop count for RIP).
 
@@ -680,17 +686,120 @@ Router(config)# ip route <dest> <mask> <next_hop> <administrative_distance>
 
 ### Dynamic Routing — RIP
 
+- **Type**: Distance Vector, Interior Gateway Protocol (IGP)
+- **Metric**: hop count — one hop = one router; bandwidth is irrelevant
+- **Max hops**: 15 — destinations beyond that are considered unreachable
+- **Update interval**: every **30 seconds** by default
+- **Message types**: Request (ask neighbours for their routing table) and Response (send local routing table to neighbours)
+
+#### RIPv1 vs RIPv2
+
+| Feature | RIPv1 | RIPv2 |
+| ------- | ----- | ----- |
+| Address type | Classful only | Supports VLSM / CIDR |
+| Subnet mask in advertisement | No | Yes |
+| Advertisement method | Broadcast (255.255.255.255) | Multicast (224.0.0.9) |
+| Auto-summary | Always on, cannot disable | Can disable with `no auto-summary` |
+
+> **RIPng** (Next Generation) is the IPv6 variant of RIP.
+
+#### Commands
+
 ```
 Router(config)# router rip
 Router(config-router)# version 2
-Router(config-router)# no auto-summary              ! advertise subnets, not classful networks
-Router(config-router)# network <network_address>    ! enable RIP on interfaces in this network
-Router(config-router)# passive-interface <iface>    ! listen only, do not send updates (e.g. toward hosts)
+Router(config-router)# no auto-summary                ! advertise subnets, not classful networks
+Router(config-router)# network <network_address>      ! enable RIP on matching interfaces (classful)
+Router(config-router)# passive-interface <iface>      ! listen only, do not send updates (e.g. toward hosts)
+Router(config-router)# default-information originate  ! advertise a default route to neighbours
+Router(config-router)# maximum-paths <number>         ! max equal-cost paths (default 4)
+Router(config-router)# distance <1-255>               ! override administrative distance
 Router# show ip protocols
 ```
 
-> RIPv1 always has auto-summary enabled and cannot disable it. RIPv2 can disable it.
+> `network` uses classful matching — e.g. `network 10.0.0.0` activates RIP on all interfaces whose IP falls in the 10.0.0.0/8 range.
 > A **passive interface** receives route advertisements but does not send them.
+
+---
+
+### Dynamic Routing — EIGRP
+
+- **Type**: Advanced (hybrid) Distance Vector, Interior Gateway Protocol
+- Originally Cisco proprietary; now an open standard (RFC 7868)
+- Much faster than RIP at reacting to network changes; no 15-hop limit (default max 100 hops)
+- Uses multicast address **224.0.0.10**
+- The only IGP that supports **unequal-cost load-balancing**; defaults to ECMP over 4 paths
+
+#### Metric
+
+EIGRP uses **bandwidth** (K1) and **delay** (K3) by default:
+
+> Simplified metric = bandwidth of the slowest link + sum of delays on all links in the path.
+> Delay is a static default value per interface type — not measured by ping.
+
+#### Router ID
+
+Selected in this priority order:
+1. Manually configured
+2. Highest IP on a loopback interface
+3. Highest IP on a physical interface
+
+#### Successor and Feasible Successor
+
+| Term | Definition |
+| ---- | ---------- |
+| Feasible Distance (FD) | This router's total metric to the destination |
+| Reported Distance (RD) | The neighbour's metric to the destination |
+| Successor | Route with the lowest FD — installed in the routing table |
+| Feasible Successor | Alternate route that satisfies the feasibility condition |
+
+**Feasibility condition**: `RD of feasible successor < FD of successor` — guarantees the alternate path is loop-free.
+
+#### Unequal-Cost Load Balancing (Variance)
+
+```
+Router(config-router)# variance <multiplier>     ! default 1 = ECMP only
+```
+
+A feasible successor is eligible for load balancing when:
+
+> `FS feasible distance ≤ variance × successor feasible distance`
+
+Variance = 1 means only routes with identical FD are used (ECMP). A feasible successor must still satisfy the feasibility condition to be eligible regardless of variance.
+
+#### Commands
+
+```
+Router(config)# router eigrp <AS-number>                    ! AS number must match on all routers
+Router(config-router)# no auto-summary
+Router(config-router)# network <address> <wildcard-mask>    ! wildcard = inverted subnet mask
+Router(config-router)# passive-interface <iface>
+Router(config-router)# eigrp router-id <A.B.C.D>
+Router(config-router)# variance <multiplier>
+Router(config-router)# maximum-paths <number>
+Router# show ip eigrp neighbors
+Router# show ip eigrp topology                              ! successors and feasible successors
+Router# show ip eigrp topology all-links                    ! all routes including non-feasible
+Router# show ip protocols
+```
+
+> Wildcard mask = bitwise inverse of the subnet mask: 255.255.255.0 → 0.0.0.255.
+> The `0` bits in the wildcard mask must match; `1` bits are "don't care."
+
+#### Manual Summarization
+
+```
+Router(config-if)# ip summary-address eigrp <AS> <network> <mask>
+```
+
+#### EIGRP for IPv6
+
+```
+Router(config)# ipv6 router eigrp <AS>
+Router(config-rtr)# no shutdown                              ! IPv6 EIGRP is shut down by default
+Router(config-if)# ipv6 eigrp <AS>                          ! activate on interface
+Router(config-if)# ipv6 summary-address eigrp <AS> ::/0     ! advertise default route
+```
 
 ---
 
@@ -903,7 +1012,7 @@ Router(config)# ipv6 route <network_prefix> <gateway_address>
 
 ---
 
-## Topics Remaining (~25 labs)
+## Topics Remaining (~18 labs)
 
 Based on the CCNA 200-301 exam syllabus, the likely remaining topics include:
 
