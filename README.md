@@ -4,11 +4,11 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 ## Progress
 
-| Status         | Count                       |
-| -------------- | --------------------------- |
-| Labs completed | 56                          |
-| Labs remaining | ~18                         |
-| Labs to redo   | Lab 42 (IPv6), Lab 48 (STP) |
+| Status         | Count         |
+| -------------- | ------------- |
+| Labs completed | 60            |
+| Labs remaining | ~14           |
+| Labs to redo   | Lab 42 (IPv6) |
 
 ---
 
@@ -69,13 +69,20 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | 51  | `051-troubleshooting-etherchannel.pkt`             | Troubleshooting EtherChannel                  |
 | 52  | `052-intervlan-routing.pkt`                        | Inter-VLAN Routing — review                   |
 | 53  | `053-troubleshooting-intervlan-routing.pkt`        | Troubleshooting Inter-VLAN Routing — review   |
-| —   | `extra-configuring-stp.pkt`                        | STP configuration (extra)                     |
-| —   | `extra-rapid-stp.pkt`                              | Rapid STP configuration (extra)               |
-| —   | `extra-etherchannel-configuration.pkt`             | EtherChannel — Layer 3 configuration (extra)  |
+| 54  | `054-single-area-ospf.pkt`                         | Single-Area OSPF                              |
+| 55  | `055-multi-area-ospf.pkt`                          | Multi-Area OSPF                               |
+| 56  | `056-ospf-troubleshooting.pkt`                     | Troubleshooting OSPF                          |
+| 57  | `057-ospfv3-ipv6.pkt`                              | OSPFv3 — IPv6                                 |
 | 58  | `058-eigrp-configuration.pkt`                      | EIGRP — configuration                         |
 | 59  | `059-eigrp-troubleshooting.pkt`                    | Troubleshooting EIGRP                         |
 | 60  | `060-ipv6-eigrp-configuration.pkt`                 | IPv6 EIGRP — configuration                    |
+| —   | `extra-configuring-stp.pkt`                        | STP configuration (extra)                     |
+| —   | `extra-rapid-stp.pkt`                              | Rapid STP configuration (extra)               |
+| —   | `extra-etherchannel-configuration.pkt`             | EtherChannel — Layer 3 configuration (extra)  |
 | —   | `extra-eigrp-configuration.pkt`                    | EIGRP — unequal-cost load balancing (extra)   |
+| —   | `extra-ospf-configuration-1.pkt`                   | OSPF configuration (extra)                    |
+| —   | `extra-ospf-configuration-2.pkt`                   | OSPF configuration (extra)                    |
+| —   | `extra-ospf-config-and-troubleshooting.pkt`        | OSPF configuration & troubleshooting (extra)  |
 
 ---
 
@@ -694,12 +701,12 @@ Router(config)# ip route <dest> <mask> <next_hop> <administrative_distance>
 
 #### RIPv1 vs RIPv2
 
-| Feature | RIPv1 | RIPv2 |
-| ------- | ----- | ----- |
-| Address type | Classful only | Supports VLSM / CIDR |
-| Subnet mask in advertisement | No | Yes |
-| Advertisement method | Broadcast (255.255.255.255) | Multicast (224.0.0.9) |
-| Auto-summary | Always on, cannot disable | Can disable with `no auto-summary` |
+| Feature                      | RIPv1                       | RIPv2                              |
+| ---------------------------- | --------------------------- | ---------------------------------- |
+| Address type                 | Classful only               | Supports VLSM / CIDR               |
+| Subnet mask in advertisement | No                          | Yes                                |
+| Advertisement method         | Broadcast (255.255.255.255) | Multicast (224.0.0.9)              |
+| Auto-summary                 | Always on, cannot disable   | Can disable with `no auto-summary` |
 
 > **RIPng** (Next Generation) is the IPv6 variant of RIP.
 
@@ -740,18 +747,19 @@ EIGRP uses **bandwidth** (K1) and **delay** (K3) by default:
 #### Router ID
 
 Selected in this priority order:
+
 1. Manually configured
 2. Highest IP on a loopback interface
 3. Highest IP on a physical interface
 
 #### Successor and Feasible Successor
 
-| Term | Definition |
-| ---- | ---------- |
-| Feasible Distance (FD) | This router's total metric to the destination |
-| Reported Distance (RD) | The neighbour's metric to the destination |
-| Successor | Route with the lowest FD — installed in the routing table |
-| Feasible Successor | Alternate route that satisfies the feasibility condition |
+| Term                   | Definition                                                |
+| ---------------------- | --------------------------------------------------------- |
+| Feasible Distance (FD) | This router's total metric to the destination             |
+| Reported Distance (RD) | The neighbour's metric to the destination                 |
+| Successor              | Route with the lowest FD — installed in the routing table |
+| Feasible Successor     | Alternate route that satisfies the feasibility condition  |
 
 **Feasibility condition**: `RD of feasible successor < FD of successor` — guarantees the alternate path is loop-free.
 
@@ -799,6 +807,181 @@ Router(config)# ipv6 router eigrp <AS>
 Router(config-rtr)# no shutdown                              ! IPv6 EIGRP is shut down by default
 Router(config-if)# ipv6 eigrp <AS>                          ! activate on interface
 Router(config-if)# ipv6 summary-address eigrp <AS> ::/0     ! advertise default route
+```
+
+---
+
+### Dynamic Routing — OSPF
+
+- **Type**: Link-state, Interior Gateway Protocol (IGP)
+- Every router builds an identical map of the network and independently runs the **Shortest Path First (SPF / Dijkstra)** algorithm to calculate the best route to each destination
+- More demanding on router resources than distance vector protocols, but reacts to network changes faster
+- Uses multicast **224.0.0.5** (all OSPF routers) and **224.0.0.6** (DR/BDR); encapsulated directly in IP with protocol number **89**
+- Default administrative distance = **110**
+- Supports ECMP (default max 4 paths); does **not** support unequal-cost load balancing
+
+| Version | Use           | CCNA         |
+| ------- | ------------- | ------------ |
+| OSPFv1  | Obsolete      | —            |
+| OSPFv2  | IPv4 networks | Required     |
+| OSPFv3  | IPv6 networks | Good to know |
+
+#### LSAs, LSDB, and Neighbor Formation
+
+- Routers store network information in **Link State Advertisements (LSAs)**, organized in the **Link State Database (LSDB)**
+- LSAs are flooded until every router in the area has an identical LSDB. Each LSA is **refreshed (re-flooded) every 30 minutes** and expires at a **max age of 60 minutes** if not refreshed
+- High-level process: (1) become neighbors → (2) exchange LSAs / build LSDB → (3) run SPF and install best routes
+
+#### Neighbor States
+
+| State    | Meaning                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------- |
+| Down     | No Hellos received yet                                                                      |
+| Init     | A Hello received, but own Router ID not yet listed in the neighbor's Hello                  |
+| 2-Way    | Bidirectional communication confirmed (both RIDs seen); DR/BDR elected here                 |
+| Exstart  | Master/Slave decided via DBD exchange — **higher Router ID becomes Master**                 |
+| Exchange | Routers exchange DBD packets (summaries of their LSDB)                                      |
+| Loading  | Routers send LSRs for missing LSAs; neighbors reply with LSUs; receipt confirmed with LSAck |
+| Full     | Full adjacency, identical LSDB — steady state                                               |
+
+> DROthers only reach **Full** with the DR and BDR; between two DROthers the state stays **2-Way** (this reduces flooding).
+
+#### OSPF Message Types
+
+| Type | Name                               | Purpose                                |
+| ---- | ---------------------------------- | -------------------------------------- |
+| 1    | Hello                              | Neighbor discovery and maintenance     |
+| 2    | Database Description (DBD)         | Summary of the router's LSDB           |
+| 3    | Link-State Request (LSR)           | Requests specific LSAs from a neighbor |
+| 4    | Link-State Update (LSU)            | Carries the requested LSAs             |
+| 5    | Link-State Acknowledgement (LSAck) | Confirms receipt of an LSA             |
+
+#### Areas
+
+- OSPF divides the network into **areas** to limit the scope of LSA flooding and SPF recalculation
+- An area is a set of routers/links sharing the same LSDB
+- **Area 0 (backbone)** — every other area must connect to it
+- **Internal router** — all interfaces in one area
+- **Area Border Router (ABR)** — interfaces in multiple areas; keeps a separate LSDB per area (recommended max 2 areas)
+- **Backbone router** — has an interface in Area 0 (includes ABRs)
+- **Autonomous System Boundary Router (ASBR)** — connects OSPF to an external network
+- **Intra-area route** = destination in the same area; **inter-area route** = destination in a different area
+
+**Area rules:** areas must be contiguous · every non-backbone area needs at least one ABR to Area 0 · OSPF interfaces in the same subnet must be in the same area.
+
+#### Metric (Cost)
+
+- `Cost = Reference bandwidth / interface bandwidth`, rounded up — any result below 1 becomes **1**
+- Default reference bandwidth = **100 Mbps**
+- Example: Ethernet (10 Mbps) → 100 / 10 = **10**; Fast Ethernet (100 Mbps) → **1**; Gigabit (1000 Mbps) → 0.1 → **1**
+- Loopback interfaces always have a cost of **1**
+- Total cost to a destination = sum of the outgoing interface costs along the path
+- Best practice: raise the reference bandwidth above the fastest link, keep it **identical on all routers**, and tune individual links with `ip ospf cost` rather than changing bandwidth (which affects other calculations without changing actual link speed)
+
+```
+Router(config-router)# auto-cost reference-bandwidth <mbps>
+Router(config-if)# ip ospf cost <number>            ! manual cost, overrides auto-calculated
+Router(config-if)# bandwidth <kbps>                 ! changes metric only, not real speed (not recommended)
+Router# show ip ospf interface brief                ! view per-interface cost
+```
+
+#### Timers
+
+| Network type               | Hello | Dead  |
+| -------------------------- | ----- | ----- |
+| Broadcast / Point-to-Point | 10 s  | 40 s  |
+| Non-broadcast              | 30 s  | 120 s |
+
+> Every received Hello resets the Dead timer. If it reaches 0, the neighbor is removed. Hello and Dead timers **must match** to form an adjacency.
+
+#### Network Types
+
+| Type           | Default on         | DR/BDR? | Neighbor discovery  |
+| -------------- | ------------------ | ------- | ------------------- |
+| Broadcast      | Ethernet, FDDI     | Yes     | Dynamic (224.0.0.5) |
+| Point-to-Point | PPP, HDLC (serial) | No      | Dynamic (224.0.0.5) |
+| Non-broadcast  | X.25, Frame Relay  | —       | —                   |
+
+- **DR/BDR election** (broadcast networks) — reduces flooding by having all routers form Full adjacency only with the DR/BDR:
+  1. Highest OSPF interface **priority** (default 1; range 0–255; **0** = never DR/BDR)
+  2. Highest **Router ID** (tie-breaker)
+- First place = DR, second = BDR, everyone else = **DROther**. Roles are not preemptive — they only change on OSPF reset or interface failure (when the DR fails, the BDR is promoted and a new BDR is elected).
+- On a directly connected point-to-point Ethernet link you can manually set the P2P type to skip the DR/BDR election. A serial link cannot use the broadcast type.
+
+```
+Router(config-if)# ip ospf priority <0-255>
+Router(config-if)# ip ospf network <broadcast|point-to-point|non-broadcast>
+```
+
+#### Router ID — selection priority
+
+1. Manually configured (`router-id`)
+2. Highest IP on a **loopback** interface
+3. Highest IP on a physical interface
+
+```
+Router(config-router)# router-id <A.B.C.D>          ! reload or `clear ip ospf process` to apply
+```
+
+#### Neighbor Requirements
+
+Must match / be satisfied to form an adjacency:
+
+1. Same **area** number
+2. Interfaces in the **same subnet**
+3. OSPF process not shut down
+4. **Unique** Router IDs
+5. Matching **Hello / Dead** timers
+6. Matching **authentication** settings
+
+> Mismatched **IP MTU** or **OSPF network type** can still form a neighbor relationship but OSPF won't function correctly. MTU defaults to 1500 bytes (`ip mtu <bytes>`).
+
+```
+Router(config-if)# ip ospf authentication-key <key>
+Router(config-if)# ip ospf authentication          ! enable authentication on the interface
+```
+
+#### LSA Types (CCNA)
+
+| Type | Name            | Generated by                         | Describes                                   |
+| ---- | --------------- | ------------------------------------ | ------------------------------------------- |
+| 1    | Router LSA      | Every OSPF router                    | The router (by RID) + its attached networks |
+| 2    | Network LSA     | The **DR** of a multi-access network | Routers attached to that segment            |
+| 5    | AS-External LSA | An **ASBR**                          | Routes to destinations outside the AS       |
+
+#### Configuration
+
+```
+Router(config)# router ospf <process_id>                  ! process ID is locally significant
+Router(config-router)# network <address> <wildcard> area <area>   ! activate OSPF on matching interfaces
+Router(config-router)# passive-interface <iface>          ! stop Hellos on the interface (still advertises its subnet)
+Router(config-router)# passive-interface default          ! make all interfaces passive
+Router(config-router)# default-information originate       ! advertise a default route
+Router(config-router)# maximum-paths <number>             ! max equal-cost paths (default 4)
+Router(config-router)# distance <number>                  ! override administrative distance
+Router(config-router)# area <area> range <address> <mask> ! summarize routes on an ABR
+Router(config-if)# ip ospf <process_id> area <area>       ! activate OSPF per interface (alternative to `network`)
+```
+
+> Unlike EIGRP's AS number, the OSPF **process ID is locally significant** — routers with different process IDs can still become neighbors.
+
+#### OSPFv3 (IPv6)
+
+```
+Router(config)# ipv6 unicast-routing
+Router(config)# ipv6 router ospf <process_id>             ! create the OSPFv3 process
+Router(config-if)# ipv6 ospf <process_id> area <area>     ! activate per interface
+Router# show ipv6 ospf
+Router# show ipv6 ospf neighbor
+```
+
+#### Verification
+
+```
+Router# show ip ospf interface [<interface>]
+Router# show ip ospf database                             ! view the LSDB
+Router# show ip ospf neighbor
+Router# show ip route ospf
 ```
 
 ---
@@ -1012,11 +1195,10 @@ Router(config)# ipv6 route <network_prefix> <gateway_address>
 
 ---
 
-## Topics Remaining (~18 labs)
+## Topics Remaining (~14 labs)
 
 Based on the CCNA 200-301 exam syllabus, the likely remaining topics include:
 
-- OSPF (single-area and multi-area)
 - FHRP — HSRP / VRRP
 - Wireless LAN configuration
 - IPv6 routing
