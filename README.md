@@ -6,8 +6,8 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 | Status         | Count         |
 | -------------- | ------------- |
-| Labs completed | 60            |
-| Labs remaining | ~14           |
+| Labs completed | 62            |
+| Labs remaining | ~12           |
 | Labs to redo   | Lab 42 (IPv6) |
 
 ---
@@ -76,6 +76,8 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | 58  | `058-eigrp-configuration.pkt`                      | EIGRP — configuration                         |
 | 59  | `059-eigrp-troubleshooting.pkt`                    | Troubleshooting EIGRP                         |
 | 60  | `060-ipv6-eigrp-configuration.pkt`                 | IPv6 EIGRP — configuration                    |
+| 69  | `069-hsrp-configuration.pkt`                       | HSRP — configuration                          |
+| 70  | `070-hsrp-troubleshooting.pkt`                     | HSRP — troubleshooting                        |
 | —   | `extra-configuring-stp.pkt`                        | STP configuration (extra)                     |
 | —   | `extra-rapid-stp.pkt`                              | Rapid STP configuration (extra)               |
 | —   | `extra-etherchannel-configuration.pkt`             | EtherChannel — Layer 3 configuration (extra)  |
@@ -83,6 +85,7 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | —   | `extra-ospf-configuration-1.pkt`                   | OSPF configuration (extra)                    |
 | —   | `extra-ospf-configuration-2.pkt`                   | OSPF configuration (extra)                    |
 | —   | `extra-ospf-config-and-troubleshooting.pkt`        | OSPF configuration & troubleshooting (extra)  |
+| —   | `extra-hsrp-configuration.pkt`                     | HSRP configuration (extra)                    |
 
 ---
 
@@ -986,6 +989,64 @@ Router# show ip route ospf
 
 ---
 
+### First Hop Redundancy Protocols (FHRP)
+
+Protects the default gateway of a subnet by letting two or more routers back each other up. If the active router fails, a backup takes over — usually within a few seconds — so hosts keep their connectivity.
+
+- Routers share a **Virtual IP (VIP)**, and each host's default gateway is set to that VIP
+- Routers negotiate their roles by exchanging multicast Hello messages
+- One router becomes **active**, the rest are **standby**
+- Hosts don't know the MAC of the VIP, so they send an **ARP request**; only the active router replies with the **Virtual MAC** for the VIP
+- If standby routers stop hearing from the active router (e.g. hardware failure), a new active router is elected
+- The host's ARP cache never changes — it always sends to the Virtual MAC. Only the **switches** must relearn where that Virtual MAC lives
+- The newly elected active router sends a **Gratuitous ARP reply** (an unrequested ARP reply, sent as a broadcast) sourced from the Virtual MAC, so every switch updates its MAC address table
+
+> A normal ARP reply is **unicast**; a Gratuitous ARP reply is **broadcast**, which is why all switches learn the new port for the Virtual MAC.
+
+#### Protocol Comparison
+
+| FHRP | Terminology    | Multicast IP                       | Virtual MAC                              | Cisco Proprietary |
+| ---- | -------------- | ---------------------------------- | ---------------------------------------- | ----------------- |
+| HSRP | Active/Standby | v1: 224.0.0.2 · v2: 224.0.0.102    | v1: `0000.0C07.ACXX` · v2: `0000.0C9F.FXXX` | Yes            |
+| VRRP | Master/Backup  | 224.0.0.18                         | `0000.5E00.01XX`                         | No                |
+| GLBP | AVG/AVF        | 224.0.0.102                        | `0007.B400.XXYY`                         | Yes               |
+
+- **HSRP** — Cisco proprietary. v2 adds IPv6 support and more groups. `XX` / `XXX` = HSRP group number (hex).
+- **VRRP** — open standard. Master/Backup is just different naming for Active/Standby. `XX` = VRRP group number.
+- **GLBP** — Cisco proprietary; load-balances across routers within a **single** subnet. One **Active Virtual Gateway (AVG)** assigns up to **4 Active Virtual Forwarders (AVFs)** (the AVG can also be an AVF); each AVF is the gateway for a portion of the hosts. `XX` = GLBP group, `YY` = AVF number.
+
+> With HSRP and VRRP you can still load-balance by making a **different router active in each subnet/VLAN**. GLBP load-balances **within** one subnet.
+
+#### Preemption
+
+- **HSRP is non-preemptive by default**: if the former active router comes back online it becomes standby rather than reclaiming the active role (configurable with `preempt`).
+- **VRRP is preemptive by default** — a returning higher-priority master reclaims the role automatically.
+
+#### HSRP Configuration
+
+```
+Router(config-if)# standby version 2                       ! use HSRP v2 (do this before other standby commands)
+Router(config-if)# standby <group> ip <virtual_ip>         ! set the Virtual IP
+Router(config-if)# standby <group> priority <number>       ! set priority (default 100)
+Router(config-if)# standby <group> preempt                 ! allow this router to reclaim the active role
+```
+
+Active router **election order**:
+
+1. Highest **priority** (default 100)
+2. Highest **IP address** (tie-breaker)
+
+> All routers must use the **same version** and the **same group number**. Enable `preempt` only on the router you want to become active.
+
+#### Verification
+
+```
+Router# show standby                                       ! HSRP state, priority, VIP, virtual MAC
+C:\> arp -a                                                ! view a host's ARP cache (Windows)
+```
+
+---
+
 ### Access Control Lists (ACLs)
 
 #### Types
@@ -1195,11 +1256,10 @@ Router(config)# ipv6 route <network_prefix> <gateway_address>
 
 ---
 
-## Topics Remaining (~14 labs)
+## Topics Remaining (~12 labs)
 
 Based on the CCNA 200-301 exam syllabus, the likely remaining topics include:
 
-- FHRP — HSRP / VRRP
 - Wireless LAN configuration
 - IPv6 routing
 - Network automation and programmability (REST APIs, JSON, Python basics)
