@@ -6,8 +6,8 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 | Status         | Count         |
 | -------------- | ------------- |
-| Labs completed | 62            |
-| Labs remaining | ~12           |
+| Labs completed | 66            |
+| Labs remaining | ~8            |
 | Labs to redo   | Lab 42 (IPv6) |
 
 ---
@@ -76,6 +76,10 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | 58  | `058-eigrp-configuration.pkt`                      | EIGRP — configuration                         |
 | 59  | `059-eigrp-troubleshooting.pkt`                    | Troubleshooting EIGRP                         |
 | 60  | `060-ipv6-eigrp-configuration.pkt`                 | IPv6 EIGRP — configuration                    |
+| 65  | `065-gre-configuration.pkt`                        | GRE Tunnel — configuration                    |
+| 66  | `066-gre-troubleshooting.pkt`                      | GRE Tunnel — troubleshooting                  |
+| 67  | `067-bgp-configuration.pkt`                        | BGP — configuration                           |
+| 68  | `068-bgp-troubleshooting.pkt`                      | BGP — troubleshooting                         |
 | 69  | `069-hsrp-configuration.pkt`                       | HSRP — configuration                          |
 | 70  | `070-hsrp-troubleshooting.pkt`                     | HSRP — troubleshooting                        |
 | —   | `extra-configuring-stp.pkt`                        | STP configuration (extra)                     |
@@ -86,6 +90,7 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | —   | `extra-ospf-configuration-2.pkt`                   | OSPF configuration (extra)                    |
 | —   | `extra-ospf-config-and-troubleshooting.pkt`        | OSPF configuration & troubleshooting (extra)  |
 | —   | `extra-hsrp-configuration.pkt`                     | HSRP configuration (extra)                    |
+| —   | `extra-gre-tunnels.pkt`                            | GRE tunnels (extra)                           |
 
 ---
 
@@ -1047,6 +1052,149 @@ C:\> arp -a                                                ! view a host's ARP c
 
 ---
 
+### Wide Area Networks (WAN)
+
+A WAN extends over a large geographical area. In an enterprise it usually refers to the **private** connections that link offices, data centers, and other sites together — either over dedicated links or over the public internet using VPNs.
+
+- **Hub-and-Spoke topology** — the central site (usually the data center) is the **hub**; the remote sites that connect back to it are the **spokes**. Each site connects to the service provider, which ties the hub and spokes together
+- A VPN creates a virtual tunnel across a shared/public network (like the internet) and can encrypt traffic so only the intended recipient can read it — the original IP packet is encapsulated inside a new packet
+
+#### Leased Lines
+
+- A dedicated **physical** connection between two sites
+- Use serial connections with **PPP** or **HDLC** encapsulation
+- Downsides vs. Ethernet WAN: higher cost, longer installation lead time, and slower speeds
+
+#### Multiprotocol Label Switching (MPLS)
+
+Service-provider networks are **shared** infrastructure — many customer enterprises connect to the same provider network to build their WAN connections. VPNs are created across MPLS using **labels**.
+
+| Term         | Meaning               |
+| ------------ | --------------------- |
+| CE router    | Customer Edge router  |
+| PE router    | Provider Edge router  |
+| P router     | Provider Core router  |
+
+- When a **PE** router receives a frame from a **CE** router, it adds a **label**. Labels — not the destination IP — are used to make forwarding decisions **inside** the provider network
+- MPLS is used only by the **PE and P** routers; the **CE** routers do not run MPLS
+- **Layer 3 MPLS VPN** — CE and PE routers peer using a routing protocol (OSPF, EIGRP, BGP…) or static routes with the PE as next hop, so the customer exchanges routes with the provider
+- **Layer 2 MPLS VPN** — the CE and PE routers do **not** peer. The provider network is fully transparent, as if the two CE routers were directly connected; if a routing protocol is used, the two CEs peer **directly with each other**
+
+#### Internet Access Technologies
+
+- **DSL (Digital Subscriber Line)** — internet over existing telephone lines; can share the line already installed in most homes. A **DSL modem** (modulator-demodulator) converts data into a format suitable for the phone line — a standalone device or built into the home router
+- **Cable** — internet over the same coax **CATV** lines used for cable TV. A **cable modem** performs the conversion
+
+#### Redundant Internet Connections
+
+| Term             | Meaning                              |
+| ---------------- | ------------------------------------ |
+| Single-homed     | 1 connection to 1 ISP                |
+| Dual-homed       | 2 connections to 1 ISP               |
+| Multi-homed      | 1 connection to each of 2 ISPs       |
+| Dual multi-homed | 2 connections to each of 2 ISPs      |
+
+---
+
+### VPNs
+
+#### Site-to-Site VPN (IPSec)
+
+A VPN between two devices (typically routers/firewalls) that connects two sites together over the internet. A tunnel is formed by encapsulating the original IP packet with a VPN header and a new IP header; with **IPSec** the original packet is also **encrypted**.
+
+1. The sending device combines the original packet with a session (encryption) key and runs them through an encryption algorithm
+2. It encapsulates the encrypted packet with a VPN header and a new IP header
+3. The new packet is sent to the other end of the tunnel
+4. The receiving device decrypts the data to recover the original packet, then forwards it to its destination
+
+**Limitations of plain IPSec:**
+
+- Does not support broadcast/multicast traffic, so dynamic routing protocols (which rely on multicast) can't run over the tunnel — solved with **GRE over IPSec**
+- Manually configuring a full mesh of tunnels between many sites is labor-intensive — solved with **DMVPN**
+
+#### GRE over IPSec
+
+- **GRE (Generic Routing Encapsulation)** creates tunnels like IPSec, but on its own it does **not** encrypt the payload — so plain GRE is **not secure**
+- GRE can encapsulate a wide variety of Layer 3 protocols as well as **broadcast and multicast** traffic (so routing protocols work over it)
+- **GRE over IPSec** combines both: the original packet is wrapped in a GRE header + new IP header, then that GRE packet is **encrypted and encapsulated inside IPSec** — you get GRE's flexibility *and* IPSec's security
+
+#### Dynamic Multipoint VPN (DMVPN)
+
+- Cisco solution that lets routers **dynamically** build a full mesh of IPSec tunnels without manually configuring every single one
+- Each spoke first builds a tunnel to the **hub**; the hub then supplies the information needed for spokes to form **direct spoke-to-spoke** tunnels on demand
+
+#### Remote Access VPN
+
+- Lets end devices (PCs, phones, laptops) securely reach the company's internal resources over the internet
+- Typically uses **TLS (Transport Layer Security)**
+- **VPN client software** on the end device forms a secure tunnel to a company router/firewall acting as a TLS server, so a remote user can reach internal resources without being physically on the company network
+
+---
+
+### GRE Tunnels — Configuration
+
+Create a virtual tunnel interface, tie it to a physical source/destination, give it an IP, then run a routing protocol over it so each side learns the other's LANs dynamically.
+
+```
+Router(config)# interface tunnel <number>
+Router(config-if)# tunnel source <local_physical_interface_or_ip>
+Router(config-if)# tunnel destination <remote_physical_ip>
+Router(config-if)# ip address <ip_address> <subnet_mask>     ! tunnel-interface IP (its own subnet)
+```
+
+> `tunnel source` / `tunnel destination` reference the **physical** (underlay) addresses that the tunnel rides over. The `ip address` on the tunnel interface is a separate **overlay** subnet shared by the two tunnel endpoints.
+> After both ends are up, configure a routing protocol (e.g. OSPF/EIGRP) so the routers advertise their LANs across the tunnel.
+
+```
+Router# show ip interface brief                    ! confirm the tunnel interface is up/up
+Router# show interfaces tunnel <number>
+```
+
+---
+
+### BGP — Border Gateway Protocol
+
+- **Type**: **Exterior Gateway Protocol (EGP)** — the routing protocol of the internet; it routes **between** organizations / autonomous systems (whereas OSPF, EIGRP, RIP are interior gateway protocols used *within* an organization)
+- A **path-vector** protocol — instead of a simple metric it chooses paths using BGP **attributes** (e.g. AS-path length)
+- Runs over **TCP port 179** for reliable delivery; neighbors (peers) are **manually configured** — there is no automatic neighbor discovery
+- Each organization is assigned an **Autonomous System Number (ASN)**
+- **eBGP** — peering between routers in **different** AS numbers (administrative distance **20**)
+- **iBGP** — peering between routers in the **same** AS number (administrative distance **200**)
+
+> BGP was removed from the CCNA 200-301 exam; these labs cover basic configuration only.
+
+#### Configuration
+
+```
+Router(config)# router bgp <local_as_number>                          ! local AS number
+Router(config-router)# neighbor <neighbor_ip> remote-as <neighbor_as> ! define a peer
+Router(config-router)# network <network_address> mask <subnet_mask>   ! originate a network into BGP
+```
+
+- The AS in `router bgp` is the router's **own** AS. On the `neighbor` line, if `remote-as` matches the local AS it's **iBGP**; if it differs it's **eBGP**
+- Unlike OSPF/EIGRP, the BGP **`network` command does not activate BGP on an interface**. It tells BGP to **originate (advertise)** that exact prefix, and the route must already exist in the routing table with the **exact** network + mask to be advertised
+
+#### Advertising a Summary with a Null0 Route
+
+To advertise an aggregate (e.g. a single `10.0.0.0/16` covering `10.0.12.0/30`, `10.0.13.0/30`, `10.0.23.0/30`) the exact summary route must exist in the routing table. Point it at **Null0** — a virtual discard interface — so the entry exists; more specific routes still win, so real traffic is unaffected.
+
+```
+Router(config)# ip route 10.0.0.0 255.255.0.0 null0        ! create the summary route (discard interface)
+Router(config-router)# network 10.0.0.0 mask 255.255.0.0   ! now BGP can advertise the /16
+```
+
+#### Verification
+
+```
+Router# show ip bgp                                        ! BGP table (learned/advertised prefixes)
+Router# show ip bgp summary                                ! neighbors, state, prefixes received
+Router# show ip route bgp                                  ! BGP routes installed in the routing table
+```
+
+> A neighbor stuck in `Idle`/`Active` (never reaching `Established`) usually means the peer IP, `remote-as`, or underlying IP reachability is wrong.
+
+---
+
 ### Access Control Lists (ACLs)
 
 #### Types
@@ -1256,7 +1404,7 @@ Router(config)# ipv6 route <network_prefix> <gateway_address>
 
 ---
 
-## Topics Remaining (~12 labs)
+## Topics Remaining (~8 labs)
 
 Based on the CCNA 200-301 exam syllabus, the likely remaining topics include:
 
