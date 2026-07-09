@@ -6,8 +6,8 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 | Status         | Count         |
 | -------------- | ------------- |
-| Labs completed | 66            |
-| Labs remaining | ~8            |
+| Labs completed | 68            |
+| Labs remaining | ~6            |
 | Labs to redo   | Lab 42 (IPv6) |
 
 ---
@@ -76,6 +76,8 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | 58  | `058-eigrp-configuration.pkt`                      | EIGRP — configuration                         |
 | 59  | `059-eigrp-troubleshooting.pkt`                    | Troubleshooting EIGRP                         |
 | 60  | `060-ipv6-eigrp-configuration.pkt`                 | IPv6 EIGRP — configuration                    |
+| 61  | `061-ppp-pap-chap.pkt`                             | PPP — PAP and CHAP authentication             |
+| 62  | `062-ppp-troubleshooting.pkt`                      | PPP — troubleshooting                         |
 | 65  | `065-gre-configuration.pkt`                        | GRE Tunnel — configuration                    |
 | 66  | `066-gre-troubleshooting.pkt`                      | GRE Tunnel — troubleshooting                  |
 | 67  | `067-bgp-configuration.pkt`                        | BGP — configuration                           |
@@ -1096,9 +1098,47 @@ Service-provider networks are **shared** infrastructure — many customer enterp
 
 ---
 
-### VPNs
+### Point-to-Point Protocol (PPP)
 
-#### Site-to-Site VPN (IPSec)
+A Layer 2 protocol commonly used over serial WAN (leased-line) connections. The default Layer 2 encapsulation on a Cisco router serial interface is **Cisco HDLC** (Cisco proprietary); switching to PPP adds features such as authentication.
+
+- Both ends of the link must use the **same** encapsulation
+- PPP's main advantage over HDLC is built-in **authentication**
+
+```
+Router# show interfaces <interface>                  ! view current encapsulation (HDLC or PPP)
+Router(config-if)# encapsulation ppp                 ! set encapsulation to PPP
+```
+
+#### PAP vs CHAP
+
+| Feature       | PAP (Password Authentication Protocol) | CHAP (Challenge Handshake Authentication Protocol) |
+| ------------- | -------------------------------------- | -------------------------------------------------- |
+| Handshake     | Two-way                                | Three-way                                          |
+| Password sent | Static password in **cleartext**       | Never sent — an **MD5 hash** of a challenge        |
+| Challenge     | None                                   | Random, dynamically generated string               |
+| Security      | Weak                                   | Strong (preferred)                                 |
+
+#### PAP Configuration
+
+```
+Router(config)# username <username> password <password>            ! credentials the peer will send us
+Router(config-if)# encapsulation ppp
+Router(config-if)# ppp authentication pap                          ! require PAP on this link
+Router(config-if)# ppp pap sent-username <username> password <password>   ! credentials we send to the peer
+```
+
+#### CHAP Configuration
+
+```
+Router(config)# username <peer_hostname> password <shared_password>   ! username = the OTHER router's hostname
+Router(config-if)# encapsulation ppp
+Router(config-if)# ppp authentication chap                            ! require CHAP on this link
+```
+
+> For CHAP, each router's local `username` must match the **other router's hostname**, and the **password must be identical** on both routers. The password is used to compute the MD5 hash and is never transmitted across the link.
+
+
 
 A VPN between two devices (typically routers/firewalls) that connects two sites together over the internet. A tunnel is formed by encapsulating the original IP packet with a VPN header and a new IP header; with **IPSec** the original packet is also **encrypted**.
 
