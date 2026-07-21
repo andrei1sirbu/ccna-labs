@@ -102,27 +102,245 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 - Use `?` to view available options at any point in the CLI. Example: `Router(config-if)# clock rate ?`
 
-### Cables
+### The TCP/IP Model
 
-| Cable Type              | Use Case                                               |
-| ----------------------- | ------------------------------------------------------ |
-| Copper Straight-Through | Connect **different** device types (e.g. PC to Switch) |
-| Copper Cross-Over       | Connect **same** device types (e.g. Switch to Switch)  |
+A layered model that breaks network communication into independent layers, each with its own job. This course uses the **updated 5-layer** TCP/IP model (the original TCP/IP model has 4 layers; the OSI model has 7).
+
+| # | Layer         | Function                                                     | Addressing   | Key Device | Example Protocols                       |
+| - | ------------- | ----------------------------------------------------------- | ------------ | ---------- | --------------------------------------- |
+| 5 | Application   | Formats, sends, and interprets application data             | —            | Hosts      | HTTP/HTTPS, FTP, TFTP, SMTP, POP3, IMAP |
+| 4 | Transport     | End-to-end **process-to-process** communication             | Port numbers | Hosts      | TCP, UDP                                |
+| 3 | Internet      | End-to-end **host-to-host** delivery across networks         | IP addresses | Routers    | IP (IPv4/IPv6), ICMP                    |
+| 2 | Local Network | **Hop-to-hop** delivery within a local network              | MAC addresses| Switches   | Ethernet (802.3), Wi-Fi (802.11)        |
+| 1 | Physical      | Sends/receives bits as electrical, optical, or radio signals | —           | Cables/NICs| —                                       |
+
+- **Application (Layer 5)** — where network communications meet applications. Commonly called **"Layer 7"** (an OSI-model reference). Network devices (routers, switches) don't care about application data — only the communicating **hosts** interpret it.
+- **Transport (Layer 4)** — a.k.a. "process-to-process" / "service-to-service." Uses **port numbers** to identify the process on each host (e.g. web server = **port 80**, FTP = **port 21**). Runs mainly on the end hosts, not routers.
+- **Internet (Layer 3)** — "Internet" = *internetwork* (between networks). **Routers** operate here, forwarding based on the destination **IP address**.
+- **Local Network (Layer 2)** — provides **hop-to-hop** delivery. A **hop** is one step from one router/host to the next router/host along the path. **Switches don't count as a hop** — they just extend the local network. Each hop re-addresses the frame to the **next hop's MAC address** (the NIC of the next router or the destination host).
+- **Physical (Layer 1)** — cables, connectors, signal levels, link speeds (copper UTP, fiber, Wi-Fi radios, NICs).
+
+#### Encapsulation and Decapsulation
+
+**Sending host — data moves *down* the stack, each layer adds a header** (Layer 2 also adds a **trailer** for error checking):
+
+1. Application prepares the data
+2. Transport adds an **L4 header** → **segment** / **datagram**
+3. Internet adds an **L3 header** → **packet**
+4. Local Network adds an **L2 header + trailer** → **frame**
+5. Physical transmits the frame as **bits** over the medium
+
+**Receiving host — data moves *up* the stack, each layer removes its header (decapsulation):**
+
+1. Receive the stream of bits at Layer 1
+2. Examine and remove the **L2 header/trailer** (trailer checks for transmission errors)
+3. Remove the **L3 header**, then the **L4 header**
+4. Deliver the data to the Application layer, which processes it and may generate a response back down the stack
+
+#### Protocol Data Units (PDUs)
+
+The message has a specific name at each encapsulation stage:
+
+| Layer | PDU              | Made of                     |
+| ----- | ---------------- | --------------------------- |
+| L4    | **Segment** (TCP) / **Datagram** (UDP) | Data + L4 header |
+| L3    | **Packet** (L3PDU)                     | Segment/datagram + L3 header |
+| L2    | **Frame** (L2PDU)                      | Packet + L2 header/trailer — *this is what's sent on the wire* |
+
+- **Payload** = everything a layer's header/trailer encapsulates. A segment's payload is the **application data**; a packet's payload is a **segment/datagram**; a frame's payload is a **packet**.
+
+#### Layer Interactions
+
+- **Adjacent-layer interaction** (within one device) — each layer provides a **service to the layer above** it and is **serviced by the layer below** it. E.g. Layer 3 serves Layer 4 by delivering segments to the correct host via IP; Layer 2 serves Layer 3 by delivering packets to the next hop via MAC.
+- **Same-layer interaction** (across devices) — each layer logically **communicates with the same layer** on the other device: a segment is addressed to the peer's **L4 port**, a packet to the destination host's **L3 IP**, a frame to the next hop's **L2 MAC**.
 
 ---
 
-### CLI Modes
+### Interfaces and Cables
 
-| Prompt            | Mode                 | Capability                                  |
-| ----------------- | -------------------- | ------------------------------------------- |
-| `Router>`         | User EXEC            | Monitoring commands only, no config changes |
-| `Router#`         | Privileged EXEC      | Can run all show and config commands        |
-| `Router(config)#` | Global Configuration | Change device configuration                 |
+#### Copper Ethernet (UTP)
+
+- **RJ-45** connectors terminate copper Ethernet cables
+- Ethernet standards are defined by the **IEEE 802.3** working group (IEEE = Institute of Electrical and Electronics Engineers)
+- Speed is measured in **bits per second**: 1 Kb = 1,000 · 1 Mb = 1,000,000 · 1 Gb = 1,000,000,000 · 1 Tb = 1,000,000,000,000 bits
+
+| Speed    | Common Name      | IEEE Standard | Informal Name | Max Length |
+| -------- | ---------------- | ------------- | ------------- | ---------- |
+| 10 Mbps  | Ethernet         | 802.3i        | 10BASE-T      | 100 m      |
+| 100 Mbps | Fast Ethernet    | 802.3u        | 100BASE-T     | 100 m      |
+| 1 Gbps   | Gigabit Ethernet | 802.3ab       | 1000BASE-T    | 100 m      |
+| 10 Gbps  | 10 Gig Ethernet  | 802.3an       | 10GBASE-T     | 100 m      |
+
+- Copper Ethernet uses **UTP (Unshielded Twisted Pair)** — 4 pairs = 8 wires
+- Unshielded copper is vulnerable to **EMI (electromagnetic interference)**; twisting the wire pairs together cancels most of it
+- **10BASE-T / 100BASE-T** use only **2 pairs** (4 wires); **1000BASE-T / 10GBASE-T** use all **4 pairs** (8 wires)
+
+#### Pinouts and Cable Types
+
+- For 10/100BASE-T, a **PC/NIC** and a **router** transmit (Tx) on pins **1,2** and receive (Rx) on pins **3,6**; a **switch** is the opposite — Tx on **3,6**, Rx on **1,2**. Because the two ends use separate wire pairs to send and receive, they can run **full-duplex** with no collisions.
+
+| Device Type            | Transmit (Tx) | Receive (Rx) |
+| ---------------------- | ------------- | ------------ |
+| Router / Firewall / PC | 1, 2          | 3, 6         |
+| Switch                 | 3, 6          | 1, 2         |
+
+- **Straight-through cable** — pin 1↔1, 2↔2, 3↔3, 6↔6. Connects devices with **opposite** pin roles (PC↔Switch, Router↔Switch)
+- **Cross-over cable** — pin 1↔3 and 2↔6. Connects devices with the **same** pin roles (Switch↔Switch, Router↔Router, PC↔PC, PC↔Router)
+- **Auto MDI-X** — modern devices detect which pins the neighbour transmits on and flip their own Tx/Rx automatically, so either cable works
+- In **1000BASE-T / 10GBASE-T** all 4 pairs (adding pins 4,5 and 7,8) are **bidirectional** — each pair both transmits and receives
+
+| Cable Type       | Use Case                                                       |
+| ---------------- | -------------------------------------------------------------- |
+| Straight-Through | Different pin roles (PC ↔ Switch, Router ↔ Switch)             |
+| Cross-Over       | Same pin roles (Switch ↔ Switch, Router ↔ Router, PC ↔ Router) |
+
+#### Fiber Optic
+
+- Switches and routers accept **SFP (Small Form-Factor Pluggable)** transceivers to connect fiber optic cables
+- A fiber cable has **two strands** — one to transmit, one to receive
+
+|               | Multimode (MM)                      | Single-mode (SM)     |
+| ------------- | ----------------------------------- | -------------------- |
+| Core diameter | Wider                               | Narrower             |
+| Light source  | LED (multiple angles)               | Laser (single angle) |
+| Distance      | Faster than copper, shorter than SM | Longest of all       |
+| Cost          | Cheaper                             | More expensive       |
+
+| Speed   | Cable Type          | IEEE Standard | Informal Name | Max Length             |
+| ------- | ------------------- | ------------- | ------------- | ---------------------- |
+| 1 Gbps  | Multimode or Single | 802.3z        | 1000BASE-LX   | 550 m (MM) · 5 km (SM) |
+| 10 Gbps | Multimode           | 802.3ae       | 10GBASE-SR    | 400 m                  |
+| 10 Gbps | Single-mode         | 802.3ae       | 10GBASE-LR    | 10 km                  |
+| 10 Gbps | Single-mode         | 802.3ae       | 10GBASE-ER    | 40 km                  |
+
+---
+
+### Ethernet LAN Switching
+
+#### Ethernet Frame
+
+An Ethernet frame has three parts: **header**, **payload (packet)**, and **trailer**.
+
+| Field                       | Bytes   | Purpose                                                     |
+| --------------------------- | ------- | ----------------------------------------------------------- |
+| Preamble                    | 7       | Receiver clock sync; bit pattern `10101010` ×7              |
+| SFD (Start Frame Delimiter) | 1       | Marks end of preamble / start of frame; `10101011`          |
+| Destination MAC             | 6       | Layer 2 destination address                                 |
+| Source MAC                  | 6       | Layer 2 source address                                      |
+| Type / Length               | 2       | ≤ 1500 = length; ≥ 1536 = type (EtherType)                  |
+| Payload (packet)            | 46–1500 | Encapsulated L3 packet (padded to 46 with zeros if smaller) |
+| FCS (Frame Check Sequence)  | 4       | **CRC (Cyclic Redundancy Check)** — receiver detects errors |
+
+- Common **EtherType** values: `0x0800` = IPv4 · `0x86DD` = IPv6 · `0x0806` = ARP
+
+#### MAC Addresses
+
+- 6 bytes, must be globally unique. First 3 bytes = **OUI (Organizationally Unique Identifier)**, assigned to the manufacturer; last 3 bytes are unique to the device
+- **Unicast** = one destination · **Broadcast** = all devices on the segment (dest MAC `FFFF.FFFF.FFFF`)
+
+#### Switch Learning and Forwarding
+
+- When a switch receives a frame, it learns the **source** MAC ↔ incoming interface mapping in its **MAC address table**
+- **Known unicast** — destination is in the table → forward out that one port
+- **Unknown unicast** — destination not in the table → **flood** (send out every port except the one it arrived on)
+- A host that receives a frame not addressed to its MAC simply **discards** it
+- Dynamic MAC entries age out after **5 minutes (300 s)** of inactivity
+
+```
+Switch# show mac address-table
+Switch# clear mac address-table dynamic                              ! clear all dynamic entries
+Switch# clear mac address-table dynamic address <mac>                ! clear one MAC
+Switch# clear mac address-table dynamic interface <interface>        ! clear one interface
+```
+
+---
+
+### Address Resolution Protocol (ARP)
+
+- Maps a known **Layer 3 (IP)** address to its **Layer 2 (MAC)** address
+- Before sending a frame, a host knows the destination **IP** but not its **MAC**, so it uses ARP to find it
+- Minimum Ethernet payload is **46 bytes**; shorter payloads are **padded with zeros**
+
+**Process:**
+
+1. **ARP Request** — a **broadcast** frame (dest MAC `FFFF.FFFF.FFFF`) asking "who has this IP?" A switch floods it out all ports except the ingress
+2. **ARP Reply** — a **unicast** frame back to the requester carrying the MAC
+
+- The requester caches the result in its **ARP table**
+- ARP EtherType = **`0x0806`**
+
+```
+Router# show arp                                   ! view the ARP table
+C:\> arp -a                                        ! host ARP cache (Windows)
+```
+
+---
+
+### IPv4 Addressing
+
+- A 32-bit address written as 4 octets. The mask splits it into a **network portion** (fixed) and a **host portion** (identifies devices)
+
+#### Address Classes
+
+| Class | Leading Bits | First Octet | Default Prefix | Purpose         |
+| ----- | ------------ | ----------- | -------------- | --------------- |
+| A     | `0xxxxxxx`   | 0–127       | /8             | Large networks  |
+| B     | `10xxxxxx`   | 128–191     | /16            | Medium networks |
+| C     | `110xxxxx`   | 192–223     | /24            | Small networks  |
+| D     | `1110xxxx`   | 224–239     | —              | Multicast       |
+| E     | `1111xxxx`   | 240–255     | —              | Experimental    |
+
+- **127.0.0.0 – 127.255.255.255** = **loopback** range, used to test the local device's network stack
+
+#### Network and Broadcast Addresses
+
+- **Network address** — first address in the subnet, all **host bits = 0**
+- **Broadcast address** — last address in the subnet, all **host bits = 1**
+- Neither can be assigned to a host; the usable host range is everything in between
+
+#### Interface Default States
+
+- **Router** interfaces are **administratively down** by default (disabled by `shutdown`) — bring them up with `no shutdown`
+- **Switch** interfaces are **not** administratively down by default — they come up when a cable is connected
+
+---
+
+### Cisco IOS CLI
+
+#### Console Access
+
+- The **first-time** configuration of a device must be done over a **console** connection (SSH/Telnet require prior setup — see [Remote Access](#remote-access--telnet-and-ssh))
+- Console ports use an **RJ-45** or **USB** connector. For an RJ-45 console you need a **rollover cable** (RJ-45 → DB-9 serial); most modern laptops also need a USB-to-serial adapter
+- A rollover cable reverses the pins end-to-end: 1↔8, 2↔7, 3↔6, 4↔5
+- Connect with a **terminal emulator** (e.g. PuTTY) using the default serial parameters:
+
+| Parameter    | Value    |
+| ------------ | -------- |
+| Speed (baud) | 9600 bps |
+| Data bits    | 8        |
+| Stop bits    | 1        |
+| Parity       | none     |
+| Flow control | none     |
+
+#### CLI Help
+
+- `?` — list available commands / options at the current point (e.g. `Router(config-if)# clock rate ?`)
+- **Tab** — autocomplete a partially typed keyword
+
+#### Modes
+
+| Prompt            | Mode                 | Entered With         | Capability                                                      |
+| ----------------- | -------------------- | -------------------- | --------------------------------------------------------------- |
+| `Router>`         | User EXEC            | (default login)      | Limited monitoring commands                                     |
+| `Router#`         | Privileged EXEC      | `enable`             | View full config, reload, save, set clock — but not edit config |
+| `Router(config)#` | Global Configuration | `configure terminal` | Change the device configuration                                 |
 
 ```
 Router> enable                   ! enter privileged EXEC
 Router# configure terminal       ! enter global config
 ```
+
+> Two configuration files exist at once: the **running-config** (active, in RAM) and the **startup-config** (loaded on reboot, in NVRAM). Editing config changes only the running-config — save it to survive a reload (see [Save Configuration](#save-configuration)).
 
 ---
 
@@ -1012,11 +1230,11 @@ Protects the default gateway of a subnet by letting two or more routers back eac
 
 #### Protocol Comparison
 
-| FHRP | Terminology    | Multicast IP                       | Virtual MAC                              | Cisco Proprietary |
-| ---- | -------------- | ---------------------------------- | ---------------------------------------- | ----------------- |
-| HSRP | Active/Standby | v1: 224.0.0.2 · v2: 224.0.0.102    | v1: `0000.0C07.ACXX` · v2: `0000.0C9F.FXXX` | Yes            |
-| VRRP | Master/Backup  | 224.0.0.18                         | `0000.5E00.01XX`                         | No                |
-| GLBP | AVG/AVF        | 224.0.0.102                        | `0007.B400.XXYY`                         | Yes               |
+| FHRP | Terminology    | Multicast IP                    | Virtual MAC                                 | Cisco Proprietary |
+| ---- | -------------- | ------------------------------- | ------------------------------------------- | ----------------- |
+| HSRP | Active/Standby | v1: 224.0.0.2 · v2: 224.0.0.102 | v1: `0000.0C07.ACXX` · v2: `0000.0C9F.FXXX` | Yes               |
+| VRRP | Master/Backup  | 224.0.0.18                      | `0000.5E00.01XX`                            | No                |
+| GLBP | AVG/AVF        | 224.0.0.102                     | `0007.B400.XXYY`                            | Yes               |
 
 - **HSRP** — Cisco proprietary. v2 adds IPv6 support and more groups. `XX` / `XXX` = HSRP group number (hex).
 - **VRRP** — open standard. Master/Backup is just different naming for Active/Standby. `XX` = VRRP group number.
@@ -1071,11 +1289,11 @@ A WAN extends over a large geographical area. In an enterprise it usually refers
 
 Service-provider networks are **shared** infrastructure — many customer enterprises connect to the same provider network to build their WAN connections. VPNs are created across MPLS using **labels**.
 
-| Term         | Meaning               |
-| ------------ | --------------------- |
-| CE router    | Customer Edge router  |
-| PE router    | Provider Edge router  |
-| P router     | Provider Core router  |
+| Term      | Meaning              |
+| --------- | -------------------- |
+| CE router | Customer Edge router |
+| PE router | Provider Edge router |
+| P router  | Provider Core router |
 
 - When a **PE** router receives a frame from a **CE** router, it adds a **label**. Labels — not the destination IP — are used to make forwarding decisions **inside** the provider network
 - MPLS is used only by the **PE and P** routers; the **CE** routers do not run MPLS
@@ -1089,12 +1307,12 @@ Service-provider networks are **shared** infrastructure — many customer enterp
 
 #### Redundant Internet Connections
 
-| Term             | Meaning                              |
-| ---------------- | ------------------------------------ |
-| Single-homed     | 1 connection to 1 ISP                |
-| Dual-homed       | 2 connections to 1 ISP               |
-| Multi-homed      | 1 connection to each of 2 ISPs       |
-| Dual multi-homed | 2 connections to each of 2 ISPs      |
+| Term             | Meaning                         |
+| ---------------- | ------------------------------- |
+| Single-homed     | 1 connection to 1 ISP           |
+| Dual-homed       | 2 connections to 1 ISP          |
+| Multi-homed      | 1 connection to each of 2 ISPs  |
+| Dual multi-homed | 2 connections to each of 2 ISPs |
 
 ---
 
@@ -1138,8 +1356,6 @@ Router(config-if)# ppp authentication chap                            ! require 
 
 > For CHAP, each router's local `username` must match the **other router's hostname**, and the **password must be identical** on both routers. The password is used to compute the MD5 hash and is never transmitted across the link.
 
-
-
 A VPN between two devices (typically routers/firewalls) that connects two sites together over the internet. A tunnel is formed by encapsulating the original IP packet with a VPN header and a new IP header; with **IPSec** the original packet is also **encrypted**.
 
 1. The sending device combines the original packet with a session (encryption) key and runs them through an encryption algorithm
@@ -1156,7 +1372,7 @@ A VPN between two devices (typically routers/firewalls) that connects two sites 
 
 - **GRE (Generic Routing Encapsulation)** creates tunnels like IPSec, but on its own it does **not** encrypt the payload — so plain GRE is **not secure**
 - GRE can encapsulate a wide variety of Layer 3 protocols as well as **broadcast and multicast** traffic (so routing protocols work over it)
-- **GRE over IPSec** combines both: the original packet is wrapped in a GRE header + new IP header, then that GRE packet is **encrypted and encapsulated inside IPSec** — you get GRE's flexibility *and* IPSec's security
+- **GRE over IPSec** combines both: the original packet is wrapped in a GRE header + new IP header, then that GRE packet is **encrypted and encapsulated inside IPSec** — you get GRE's flexibility _and_ IPSec's security
 
 #### Dynamic Multipoint VPN (DMVPN)
 
@@ -1194,7 +1410,7 @@ Router# show interfaces tunnel <number>
 
 ### BGP — Border Gateway Protocol
 
-- **Type**: **Exterior Gateway Protocol (EGP)** — the routing protocol of the internet; it routes **between** organizations / autonomous systems (whereas OSPF, EIGRP, RIP are interior gateway protocols used *within* an organization)
+- **Type**: **Exterior Gateway Protocol (EGP)** — the routing protocol of the internet; it routes **between** organizations / autonomous systems (whereas OSPF, EIGRP, RIP are interior gateway protocols used _within_ an organization)
 - A **path-vector** protocol — instead of a simple metric it chooses paths using BGP **attributes** (e.g. AS-path length)
 - Runs over **TCP port 179** for reliable delivery; neighbors (peers) are **manually configured** — there is no automatic neighbor discovery
 - Each organization is assigned an **Autonomous System Number (ASN)**
