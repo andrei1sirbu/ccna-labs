@@ -6,8 +6,8 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 
 | Status         | Count         |
 | -------------- | ------------- |
-| Labs completed | 68            |
-| Labs remaining | ~6            |
+| Labs completed | 71            |
+| Labs remaining | ~3            |
 | Labs to redo   | Lab 42 (IPv6) |
 
 ---
@@ -84,6 +84,19 @@ Hands-on study repository documenting Cisco Packet Tracer labs completed as part
 | 68  | `068-bgp-troubleshooting.pkt`                      | BGP — troubleshooting                         |
 | 69  | `069-hsrp-configuration.pkt`                       | HSRP — configuration                          |
 | 70  | `070-hsrp-troubleshooting.pkt`                     | HSRP — troubleshooting                        |
+| 71  | `071-ipv4-ipv6-acls.pkt`                           | ACLs — IPv4 and IPv6                          |
+| 72  | `072-acl-troubleshooting.pkt`                      | Troubleshooting ACLs                          |
+| 73  | `073-span.pkt`                                     | SPAN — Switched Port Analyzer                 |
+| —   | `extra-packet-tracer-introduction.pkt`             | Packet Tracer introduction (extra)            |
+| —   | `extra-osi-model.pkt`                              | OSI model (extra)                             |
+| —   | `extra-connecting-devices.pkt`                     | Connecting devices and cabling (extra)        |
+| —   | `extra-ethernet-lan-switching.pkt`                 | Ethernet LAN switching (extra)                |
+| —   | `extra-ipv4-addressing.pkt`                        | IPv4 addressing (extra)                       |
+| —   | `extra-interface-configuration.pkt`                | Interface configuration (extra)               |
+| —   | `extra-basic-device-security.pkt`                  | Basic device security (extra)                 |
+| —   | `extra-vlans-part-1.pkt`                           | VLANs — part 1 (extra)                        |
+| —   | `extra-vlans-part-2.pkt`                           | VLANs — part 2 (extra)                        |
+| —   | `extra-multilayer-switching.pkt`                   | Multilayer switching (extra)                  |
 | —   | `extra-configuring-stp.pkt`                        | STP configuration (extra)                     |
 | —   | `extra-rapid-stp.pkt`                              | Rapid STP configuration (extra)               |
 | —   | `extra-etherchannel-configuration.pkt`             | EtherChannel — Layer 3 configuration (extra)  |
@@ -492,52 +505,113 @@ Router(config-if)# clock rate <bits_per_second>   ! set on DCE side only
 
 ### VLANs on Switches
 
+A **VLAN (Virtual LAN)** is a logical separation of a Layer 2 broadcast domain — one physical switch can host **multiple independent broadcast domains**.
+
+- A **LAN** is a single **broadcast domain** — the group of devices that receive a broadcast frame (dest `FFFF.FFFF.FFFF`) sent by any member
+- VLANs are configured on switches **per interface**
+- Benefits: **less unnecessary broadcast traffic** (broadcasts stay within a VLAN) and **better security** (devices in one VLAN can't see another VLAN's traffic)
+- A switch **does not forward traffic directly between VLANs** — inter-VLAN traffic must go to a **router** (or a multilayer switch); only a Layer 3 device can perform **inter-VLAN routing**
+
+#### Default VLANs and VLAN Ranges
+
+- **VLAN 1** is the default VLAN — every interface belongs to it until reassigned
+- VLANs **1** and **1002–1005** exist by default and **cannot be deleted**
+- **Normal range:** 1–1005 · **Extended range:** 1006–4094 (some older switches don't support the extended range)
+- The dot1Q VID field is **12 bits** → 0–4095, but **0 and 4095 are reserved**, leaving **4094 usable VLANs (1–4094)**
+
 ```
 Switch# show vlan
 Switch(config)# vlan <number>
 Switch(config-vlan)# name <name>
 ```
 
-#### Access Ports (one VLAN per port)
+#### Access Ports (one VLAN, usually to an end host)
+
+An access port belongs to a **single VLAN** and typically connects to an end device (PC, printer). A port to an end host usually ends up in access mode on its own, but **best practice is to set the mode manually** rather than rely on DTP negotiation (see [DTP](#dynamic-trunking-protocol-dtp)).
 
 ```
 Switch(config-if)# switchport mode access
 Switch(config-if)# switchport access vlan <number>
 ```
 
-#### Trunk Ports (carry traffic from multiple VLANs)
+#### Trunk Ports (carry multiple VLANs over one link)
+
+Using a separate physical link per VLAN wastes interfaces; a **trunk** carries many VLANs over a single link. The switch **tags** each frame on a trunk so the receiving switch knows which VLAN it belongs to. By default **all VLANs are allowed** on a trunk.
 
 ```
 Switch(config-if)# switchport mode trunk
-Switch(config-if)# switchport trunk allowed vlan <number,number,...>
-Switch(config-if)# switchport trunk allowed vlan add <number>
-Switch(config-if)# switchport trunk allowed vlan remove <number>
+Switch(config-if)# switchport trunk allowed vlan <n,n,...>
+Switch(config-if)# switchport trunk allowed vlan add <n>
+Switch(config-if)# switchport trunk allowed vlan remove <n>
 Switch(config-if)# switchport trunk allowed vlan all
 Switch(config-if)# switchport trunk allowed vlan none
-Switch(config-if)# switchport trunk allowed vlan except <number>
+Switch(config-if)# switchport trunk allowed vlan except <n>
 ```
 
----
+#### Trunking Protocols and Encapsulation
 
-### VLANs on Multilayer Switches
+| Protocol           | Standard           | Native VLAN | Notes              |
+| ------------------ | ------------------ | ----------- | ------------------ |
+| **802.1Q (dot1Q)** | IEEE open standard | Yes         | The modern default |
+| **ISL**            | Cisco proprietary  | No          | Legacy, deprecated |
 
-Multilayer switches support two trunk encapsulation types: `dot1q` (industry standard) and `isl` (Cisco proprietary). You must set encapsulation before setting trunk mode.
+On a switch that supports **both**, trunk mode is `auto` and you **must set the encapsulation before** setting trunk mode. Switches that only support dot1Q don't need this step.
 
 ```
 Switch(config-if)# switchport trunk encapsulation dot1q
 Switch(config-if)# switchport mode trunk
 ```
 
----
+#### The 802.1Q Tag
 
-### Inter-VLAN Routing
+dot1Q inserts a **4-byte (32-bit)** tag into the Ethernet header, **between the Source MAC and the Type/Length field** (see [Ethernet Frame](#ethernet-frame)). It has two 16-**bit** halves:
 
-Uses subinterfaces on a router (Router-on-a-Stick).
+| Field                              | Bits | Purpose                                        |
+| ---------------------------------- | ---- | ---------------------------------------------- |
+| **TPID** (Tag Protocol Identifier) | 16   | Always `0x8100` — marks the frame as dot1Q-tagged |
+| **TCI** (Tag Control Information)  | 16   | Split into PCP + DEI + VID (below)             |
+
+TCI breakdown:
+
+| Sub-field                         | Bits | Purpose                                            |
+| --------------------------------- | ---- | -------------------------------------------------- |
+| **PCP** (Priority Code Point)     | 3    | Class of Service (CoS) — prioritizes traffic when congested |
+| **DEI** (Drop Eligible Indicator) | 1    | Marks frames that may be dropped under congestion  |
+| **VID** (VLAN ID)                 | 12   | The VLAN the frame belongs to (1–4094)             |
+
+#### Native VLAN (dot1Q only — ISL has no native VLAN)
+
+- Frames in the **native VLAN** are sent **untagged**. A switch that receives an **untagged** frame on a trunk assumes it belongs to the **native VLAN**
+- Default native VLAN is **VLAN 1** on every trunk; configurable per trunk port
+- **Both ends of a trunk must agree on the native VLAN.** A mismatch places untagged frames into the *wrong* VLAN on the far side (a VLAN-hopping risk; CDP logs a warning)
+- **Security best practice:** set the native VLAN to an unused VLAN
 
 ```
-Router(config)# interface <interface>.<vlan_number>       ! create subinterface
-Router(config-subif)# encapsulation dot1q <vlan_number>   ! tag subinterface with VLAN
-Router(config-subif)# ip address <address> <subnet_mask>  ! set gateway for that VLAN
+Switch(config-if)# switchport trunk native vlan <vlan_id>
+```
+
+---
+
+### Inter-VLAN Routing — Router on a Stick (ROAS)
+
+Routes between VLANs using a single **trunk link** to a router that has a **subinterface per VLAN**; each subinterface is the **default gateway** for its VLAN.
+
+- A host sending to another subnet forwards the frame to its **default gateway**; the router routes between the subnets and sends it back down the trunk
+- The link between the switch and the router **must be a trunk**
+- The **subinterface number doesn't have to match the VLAN ID**, but matching them is recommended for clarity
+
+```
+Router(config)# interface <interface>.<subif_number>      ! create subinterface
+Router(config-subif)# encapsulation dot1q <vlan_id>       ! tag this subinterface with a VLAN
+Router(config-subif)# ip address <address> <subnet_mask>  ! gateway IP for that VLAN
+```
+
+**Native VLAN on the router** — two equivalent ways:
+
+```
+Router(config-subif)# encapsulation dot1q <vlan_id> native   ! mark the subinterface as native
+! — or —
+Router(config-if)# ip address <address> <mask>               ! put the native VLAN's IP on the physical interface
 ```
 
 #### Troubleshooting
@@ -548,6 +622,37 @@ Router# show interface <interface>
 Router(config)# no vlan <vlan_number>              ! delete a VLAN
 C:\> ipconfig /all                                 ! check host config
 ```
+
+---
+
+### Multilayer Switches (Layer 3 Switching)
+
+A **multilayer switch** can both switch (Layer 2) and route (Layer 3) — an alternative to ROAS for inter-VLAN routing that keeps the traffic inside the switch instead of sending it to an external router.
+
+**Why prefer it over ROAS?**
+
+- ROAS sends all inter-VLAN traffic across one trunk to the router; that single link can become a **congestion bottleneck**, and a large network may not even have enough router ports for every VLAN
+- A multilayer switch routes **internally** between VLANs via **Switch Virtual Interfaces (SVIs)** — no trip to an external router
+- Each host's **default gateway** becomes the **SVI IP** instead of a router interface
+- You can still add a **Layer 3 (routed) link** to a router and a **default route** to send outbound (e.g. internet) traffic on
+
+**What a multilayer switch can do:** assign IPs to interfaces like a router · create an **SVI per VLAN** with an IP · configure static/dynamic routes · perform inter-VLAN routing.
+
+```
+Switch(config)# ip routing                          ! REQUIRED — enable Layer 3 routing
+Switch(config-if)# no switchport                    ! turn a port into a routed (Layer 3) port
+Switch(config)# interface vlan <vlan_id>            ! create an SVI for the VLAN
+Switch(config-if)# ip address <ip> <mask>
+Switch(config-if)# no shutdown
+Switch(config)# ip route 0.0.0.0 0.0.0.0 <next_hop> ! default route toward the router
+```
+
+**An SVI is up/up only when all of these are true:**
+
+1. The **VLAN exists** on the switch (creating an SVI does **not** auto-create the VLAN)
+2. At least one **access port in that VLAN is up/up**, and/or an **up/up trunk that allows** the VLAN
+3. The **VLAN is not shut down**
+4. The **SVI itself is not shut down** (SVIs are shut down by default)
 
 ---
 
